@@ -9,13 +9,12 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // ======================================
-// FILE WEBSITE
+// WEBSITE
 // ======================================
 
 const publicFolder = path.join(__dirname, "..");
 
 app.use(express.static(publicFolder));
-
 
 // ======================================
 // HEALTH CHECK
@@ -28,13 +27,11 @@ app.get("/health", (req, res) => {
     });
 });
 
-
 // ======================================
-// KONFIGURASI WEBRTC
+// WEBRTC CONFIG
 // ======================================
 
 app.get("/config", (req, res) => {
-
     const iceServers = [
         {
             urls: "stun:stun.l.google.com:19302"
@@ -44,18 +41,15 @@ app.get("/config", (req, res) => {
         }
     ];
 
-    // TURN opsional
     if (
         process.env.TURN_URL &&
         process.env.TURN_USERNAME &&
         process.env.TURN_CREDENTIAL
     ) {
-
-        const urls =
-            process.env.TURN_URL
-                .split(",")
-                .map(url => url.trim())
-                .filter(Boolean);
+        const urls = process.env.TURN_URL
+            .split(",")
+            .map(url => url.trim())
+            .filter(Boolean);
 
         iceServers.push({
             urls: urls,
@@ -67,74 +61,36 @@ app.get("/config", (req, res) => {
     res.json({
         iceServers
     });
-
 });
 
-
 // ======================================
-// WEBSOCKET SERVER
+// WEBSOCKET
 // ======================================
 
 const wss = new WebSocket.Server({
     server: server
 });
 
-
-// ======================================
-// ROOM
-// ======================================
-//
-// rooms = Map {
-//   roomId => Set<WebSocket>
-// }
-//
-// Maksimal 2 orang dalam satu room.
-//
-
 const rooms = new Map();
 
-
 // ======================================
-// DATA USER
-// ======================================
-
-function getClientData(ws) {
-
-    return {
-        room: ws.room || null,
-        name: ws.name || "Teman"
-    };
-
-}
-
-
-// ======================================
-// KIRIM PESAN KE CLIENT
+// SEND
 // ======================================
 
 function send(ws, data) {
-
     if (
         ws &&
         ws.readyState === WebSocket.OPEN
     ) {
-
-        ws.send(
-            JSON.stringify(data)
-        );
-
+        ws.send(JSON.stringify(data));
     }
-
 }
 
-
 // ======================================
-// KIRIM KE SEMUA MEMBER ROOM
-// KECUALI PENGIRIM
+// BROADCAST
 // ======================================
 
 function broadcast(roomId, sender, data) {
-
     const room = rooms.get(roomId);
 
     if (!room) {
@@ -142,27 +98,20 @@ function broadcast(roomId, sender, data) {
     }
 
     for (const client of room) {
-
         if (
             client !== sender &&
             client.readyState === WebSocket.OPEN
         ) {
-
             send(client, data);
-
         }
-
     }
-
 }
 
-
 // ======================================
-// HAPUS CLIENT DARI ROOM
+// REMOVE ROOM USER
 // ======================================
 
 function removeFromRoom(ws) {
-
     const roomId = ws.room;
 
     if (!roomId) {
@@ -178,40 +127,31 @@ function removeFromRoom(ws) {
 
     room.delete(ws);
 
-    broadcast(
-        roomId,
-        ws,
-        {
-            type: "leave"
-        }
-    );
+    broadcast(roomId, ws, {
+        type: "leave"
+    });
 
     if (room.size === 0) {
-
         rooms.delete(roomId);
-
     }
 
     ws.room = null;
-
 }
 
-
 // ======================================
-// WEBSOCKET CONNECTION
+// CONNECTION
 // ======================================
 
 wss.on("connection", ws => {
 
     console.log("Client terhubung.");
 
-
     ws.room = null;
     ws.name = "Teman";
-
+    ws.isAlive = true;
 
     // ==================================
-    // TERIMA PESAN
+    // MESSAGE
     // ==================================
 
     ws.on("message", rawMessage => {
@@ -219,12 +159,9 @@ wss.on("connection", ws => {
         let message;
 
         try {
-
-            message =
-                JSON.parse(
-                    rawMessage.toString()
-                );
-
+            message = JSON.parse(
+                rawMessage.toString()
+            );
         } catch (error) {
 
             send(ws, {
@@ -233,25 +170,21 @@ wss.on("connection", ws => {
             });
 
             return;
-
         }
 
+        console.log("Pesan:", message.type);
 
         // ==================================
-        // JOIN ROOM
+        // JOIN
         // ==================================
 
         if (message.type === "join") {
-
             joinRoom(ws, message);
-
             return;
-
         }
 
-
         // ==================================
-        // PESAN HARUS SUDAH JOIN ROOM
+        // HARUS JOIN
         // ==================================
 
         if (!ws.room) {
@@ -262,9 +195,7 @@ wss.on("connection", ws => {
             });
 
             return;
-
         }
-
 
         // ==================================
         // ACCEPT
@@ -272,19 +203,13 @@ wss.on("connection", ws => {
 
         if (message.type === "accept") {
 
-            broadcast(
-                ws.room,
-                ws,
-                {
-                    type: "accepted",
-                    name: ws.name
-                }
-            );
+            broadcast(ws.room, ws, {
+                type: "accepted",
+                name: ws.name
+            });
 
             return;
-
         }
-
 
         // ==================================
         // REJECT
@@ -292,18 +217,12 @@ wss.on("connection", ws => {
 
         if (message.type === "reject") {
 
-            broadcast(
-                ws.room,
-                ws,
-                {
-                    type: "rejected"
-                }
-            );
+            broadcast(ws.room, ws, {
+                type: "rejected"
+            });
 
             return;
-
         }
-
 
         // ==================================
         // CHAT
@@ -312,35 +231,31 @@ wss.on("connection", ws => {
         if (message.type === "chat") {
 
             const text =
-                typeof message.text === "string"
-                    ? message.text.trim()
-                    : "";
+                typeof message.message === "string"
+                    ? message.message.trim()
+                    : typeof message.text === "string"
+                        ? message.text.trim()
+                        : "";
 
             if (!text) {
                 return;
             }
 
-            // Batasi panjang pesan
             const safeText =
                 text.substring(0, 500);
 
-            broadcast(
-                ws.room,
-                ws,
-                {
-                    type: "chat",
-                    name: ws.name,
-                    text: safeText
-                }
-            );
+            broadcast(ws.room, ws, {
+                type: "chat",
+                name: ws.name,
+                message: safeText,
+                text: safeText
+            });
 
             return;
-
         }
 
-
         // ==================================
-        // SIGNALING WEBRTC
+        // WEBRTC
         // ==================================
 
         if (
@@ -356,9 +271,7 @@ wss.on("connection", ws => {
             );
 
             return;
-
         }
-
 
         // ==================================
         // LEAVE
@@ -369,14 +282,12 @@ wss.on("connection", ws => {
             removeFromRoom(ws);
 
             return;
-
         }
 
     });
 
-
     // ==================================
-    // CLIENT TERPUTUS
+    // CLOSE
     // ==================================
 
     ws.on("close", () => {
@@ -384,9 +295,7 @@ wss.on("connection", ws => {
         console.log("Client terputus.");
 
         removeFromRoom(ws);
-
     });
-
 
     // ==================================
     // ERROR
@@ -401,16 +310,21 @@ wss.on("connection", ws => {
 
     });
 
+    // ==================================
+    // PONG
+    // ==================================
+
+    ws.on("pong", () => {
+        ws.isAlive = true;
+    });
 });
 
-
 // ======================================
-// FUNGSI JOIN ROOM
+// JOIN ROOM
 // ======================================
 
 function joinRoom(ws, message) {
 
-    // Kalau sudah ada di room
     if (ws.room) {
 
         send(ws, {
@@ -419,15 +333,15 @@ function joinRoom(ws, message) {
         });
 
         return;
-
     }
 
-
-    // Validasi room
+    // Menerima roomId dari app.js
     const roomId =
-        typeof message.room === "string"
-            ? message.room.trim()
-            : "";
+        typeof message.roomId === "string"
+            ? message.roomId.trim()
+            : typeof message.room === "string"
+                ? message.room.trim()
+                : "";
 
     if (!roomId) {
 
@@ -437,11 +351,8 @@ function joinRoom(ws, message) {
         });
 
         return;
-
     }
 
-
-    // Nama
     let name =
         typeof message.name === "string"
             ? message.name.trim()
@@ -453,21 +364,14 @@ function joinRoom(ws, message) {
 
     name = name.substring(0, 30);
 
-
-    // Ambil / buat room
     let room = rooms.get(roomId);
 
     if (!room) {
 
         room = new Set();
 
-        rooms.set(
-            roomId,
-            room
-        );
-
+        rooms.set(roomId, room);
     }
-
 
     // Maksimal 2 orang
     if (room.size >= 2) {
@@ -478,24 +382,24 @@ function joinRoom(ws, message) {
         });
 
         return;
-
     }
 
-
-    // Simpan data client
     ws.room = roomId;
     ws.name = name;
 
     room.add(ws);
 
+    // ==================================
+    // ORANG PERTAMA
+    // ==================================
 
-    // Orang pertama = caller
     if (room.size === 1) {
 
         send(ws, {
             type: "joined",
             role: "caller",
-            name: name
+            name: name,
+            roomId: roomId
         });
 
         console.log(
@@ -503,11 +407,12 @@ function joinRoom(ws, message) {
         );
 
         return;
-
     }
 
+    // ==================================
+    // ORANG KEDUA
+    // ==================================
 
-    // Orang kedua = callee
     if (room.size === 2) {
 
         let caller = null;
@@ -518,19 +423,17 @@ function joinRoom(ws, message) {
                 caller = client;
                 break;
             }
-
         }
 
-
-        // Beri tahu orang kedua
+        // Kirim joined ke orang kedua
         send(ws, {
             type: "joined",
             role: "callee",
-            name: name
+            name: name,
+            roomId: roomId
         });
 
-
-        // Panggilan masuk ke orang kedua
+        // Panggilan masuk
         send(ws, {
             type: "incoming",
             name: caller
@@ -538,26 +441,20 @@ function joinRoom(ws, message) {
                 : "Teman"
         });
 
-
-        // Caller mendapat status memanggil
+        // Caller diberi tahu bahwa teman sudah masuk
         if (caller) {
 
             send(caller, {
                 type: "ringing",
                 name: name
             });
-
         }
-
 
         console.log(
             `Room ${roomId}: ${name} bergabung.`
         );
-
     }
-
 }
-
 
 // ======================================
 // KEEP ALIVE
@@ -572,38 +469,18 @@ setInterval(() => {
             ws.terminate();
 
             continue;
-
         }
 
         ws.isAlive = false;
 
         try {
-
             ws.ping();
-
         } catch (error) {
-
             ws.terminate();
-
         }
-
     }
 
 }, 30000);
-
-
-wss.on("connection", ws => {
-
-    ws.isAlive = true;
-
-    ws.on("pong", () => {
-
-        ws.isAlive = true;
-
-    });
-
-});
-
 
 // ======================================
 // START SERVER
@@ -617,6 +494,5 @@ server.listen(
         console.log(
             `VideoChat berjalan di port ${PORT}`
         );
-
     }
 );
