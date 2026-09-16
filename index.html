@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#075e54">
+
+    <title>VideoChat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HALAMAN UTAMA -->
+    <main id="homePage" class="page">
+
+        <div class="home-card">
+
+            <div class="logo">
+                📹
+            </div>
+
+            <h1>VideoChat</h1>
+            <p class="subtitle">
+                Video call dan chat dengan teman
+            </p>
+
+            <label for="nameInput">Nama Anda</label>
+            <input
+                id="nameInput"
+                type="text"
+                maxlength="30"
+                placeholder="Masukkan nama"
+                autocomplete="name"
+            >
+
+            <button id="createBtn" class="primary-btn">
+                📞 Buat Panggilan
+            </button>
+
+            <div class="divider">
+                <span>atau</span>
+            </div>
+
+            <label for="roomInput">Kode / Link Panggilan</label>
+            <input
+                id="roomInput"
+                type="text"
+                placeholder="Masukkan kode panggilan"
+                autocomplete="off"
+            >
+
+            <button id="joinBtn" class="secondary-btn">
+                👤 Gabung Panggilan
+            </button>
+
+            <p id="homeStatus" class="status"></p>
+
+        </div>
+
+    </main>
+
+
+    <!-- HALAMAN PANGGILAN -->
+    <main id="callPage" class="call-page hidden">
+
+        <!-- VIDEO TEMAN -->
+        <video
+            id="remoteVideo"
+            class="remote-video"
+            autoplay
+            playsinline
+        ></video>
+
+        <!-- Tampilan ketika belum ada teman -->
+        <div id="waitingScreen" class="waiting-screen">
+
+            <div class="waiting-icon">
+                📞
+            </div>
+
+            <h2 id="waitingTitle">
+                Menunggu teman...
+            </h2>
+
+            <p id="waitingText">
+                Bagikan link panggilan kepada teman Anda.
+            </p>
+
+            <button id="copyLinkBtn" class="copy-btn">
+                🔗 Salin Link Panggilan
+            </button>
+
+        </div>
+
+
+        <!-- VIDEO SENDIRI -->
+        <video
+            id="localVideo"
+            class="local-video"
+            autoplay
+            muted
+            playsinline
+        ></video>
+
+
+        <!-- INFO PANGGILAN -->
+        <div class="call-info">
+
+            <div id="peerName" class="peer-name">
+                Menunggu...
+            </div>
+
+            <div id="callStatus" class="call-status">
+                Menghubungkan...
+            </div>
+
+        </div>
+
+
+        <!-- CHAT -->
+        <section id="chatPanel" class="chat-panel">
+
+            <div class="chat-header">
+                <span>💬 Chat</span>
+
+                <button id="closeChatBtn" class="close-chat">
+                    ×
+                </button>
+            </div>
+
+            <div id="messages" class="messages"></div>
+
+            <div class="chat-input-area">
+
+                <input
+                    id="messageInput"
+                    type="text"
+                    maxlength="500"
+                    placeholder="Ketik pesan..."
+                    autocomplete="off"
+                >
+
+                <button id="sendBtn">
+                    ➤
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- TOMBOL PANGGILAN -->
+        <div class="call-controls">
+
+            <button id="chatBtn" class="control-btn">
+                💬
+            </button>
+
+            <button id="muteBtn" class="control-btn">
+                🎤
+            </button>
+
+            <button id="cameraBtn" class="control-btn">
+                📹
+            </button>
+
+            <button id="hangupBtn" class="control-btn hangup">
+                📞
+            </button>
+
+        </div>
+
+
+        <!-- PANGGILAN MASUK -->
+        <div id="incomingCall" class="incoming-overlay hidden">
+
+            <div class="incoming-card">
+
+                <div class="incoming-avatar">
+                    👤
+                </div>
+
+                <h2>Panggilan masuk</h2>
+
+                <p id="incomingName">
+                    Teman
+                </p>
+
+                <p class="incoming-type">
+                    📹 Panggilan video
+                </p>
+
+                <div class="incoming-buttons">
+
+                    <button id="rejectBtn" class="reject-btn">
+                        ❌ Tolak
+                    </button>
+
+                    <button id="acceptBtn" class="accept-btn">
+                        📹 Terima
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- NOTIFIKASI -->
+    <div id="toast" class="toast hidden"></div>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
