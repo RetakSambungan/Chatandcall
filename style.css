@@ -27,7 +27,6 @@ button {
     display: none !important;
 }
 
-
 /* =========================
    HALAMAN UTAMA
 ========================= */
@@ -108,10 +107,6 @@ button {
     background: #075e54;
 }
 
-.primary-btn:hover {
-    background: #064e46;
-}
-
 .secondary-btn {
     background: #128c7e;
 }
@@ -139,7 +134,6 @@ button {
     color: #d32f2f;
 }
 
-
 /* =========================
    HALAMAN VIDEO CALL
 ========================= */
@@ -149,6 +143,7 @@ button {
     inset: 0;
     overflow: hidden;
     background: #111;
+    z-index: 10;
 }
 
 .remote-video {
@@ -170,4 +165,310 @@ button {
     border-radius: 14px;
     background: #222;
     border: 2px solid white;
-    z-index: 
+    z-index: 30;
+}
+
+/* =========================
+   LAYAR MENUNGGU
+========================= */
+
+.waiting-screen {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 40px);
+    max-width: 430px;
+    padding: 28px 20px;
+    text-align: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 20px;
+    z-index: 20;
+}
+
+.waiting-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.waiting-screen h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.waiting-screen p {
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.copy-btn {
+    margin-top: 18px;
+    padding: 13px 18px;
+    border-radius: 10px;
+    background: #25d366;
+    color: white;
+    font-weight: bold;
+}
+
+/* =========================
+   INFO PANGGILAN
+========================= */
+
+.call-info {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    color: white;
+    z-index: 30;
+    text-shadow: 0 1px 4px black;
+}
+
+.peer-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.call-status {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+/* =========================
+   CONTROL
+========================= */
+
+.call-controls {
+    position: absolute;
+    left: 50%;
+    bottom: 25px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    z-index: 40;
+}
+
+.control-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 22px;
+}
+
+.control-btn.hangup {
+    background: #e53935;
+    color: white;
+    transform: rotate(135deg);
+}
+
+/* =========================
+   CHAT
+========================= */
+
+.chat-panel {
+    position: absolute;
+    right: 15px;
+    bottom: 95px;
+    width: 330px;
+    max-width: calc(100% - 30px);
+    height: 430px;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    z-index: 50;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+
+.chat-panel.open {
+    display: flex;
+}
+
+.chat-header {
+    padding: 15px;
+    background: #075e54;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.close-chat {
+    background: transparent;
+    color: white;
+    font-size: 25px;
+}
+
+.messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: #efeae2;
+}
+
+.message {
+    display: block;
+    width: fit-content;
+    max-width: 85%;
+    margin-bottom: 8px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: white;
+    word-break: break-word;
+}
+
+.message.mine {
+    margin-left: auto;
+    background: #d9fdd3;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 8px;
+    gap: 8px;
+    background: white;
+}
+
+.chat-input-area input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+}
+
+.chat-input-area button {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #075e54;
+    color: white;
+    font-size: 20px;
+}
+
+/* =========================
+   PANGGILAN MASUK
+========================= */
+
+.incoming-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.incoming-card {
+    width: calc(100% - 40px);
+    max-width: 350px;
+    background: white;
+    padding: 30px 20px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.incoming-avatar {
+    font-size: 60px;
+    margin-bottom: 10px;
+}
+
+.incoming-card h2 {
+    margin-bottom: 8px;
+}
+
+.incoming-type {
+    color: #667781;
+    margin-top: 8px;
+}
+
+.incoming-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.incoming-buttons button {
+    flex: 1;
+    padding: 13px 8px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.reject-btn {
+    background: #e53935;
+}
+
+.accept-btn {
+    background: #25d366;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    transform: translateX(-50%);
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    z-index: 200;
+    max-width: calc(100% - 30px);
+    text-align: center;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+    .local-video {
+        width: 100px;
+        height: 140px;
+        right: 10px;
+        top: 10px;
+    }
+
+    .call-info {
+        left: 10px;
+        top: 10px;
+        max-width: 60%;
+    }
+
+    .waiting-screen {
+        padding: 22px 15px;
+    }
+
+    .waiting-screen h2 {
+        font-size: 20px;
+    }
+
+    .call-controls {
+        bottom: 18px;
+        gap: 10px;
+    }
+
+    .control-btn {
+        width: 50px;
+        height: 50px;
+    }
+
+    .chat-panel {
+        right: 10px;
+        bottom: 85px;
+        width: calc(100% - 20px);
+        height: 55vh;
+    }
+}
