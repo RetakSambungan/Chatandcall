@@ -1,0 +1,16 @@
+{
+  "name": "videochat",
+  "version": "1.0.0",
+  "description": "Website video call dan chat 1 lawan 1",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}
