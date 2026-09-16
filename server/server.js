@@ -7,7 +7,8 @@ const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
 
-let file = req.url === "/"
+let file =
+req.url === "/"
 ? "index.html"
 : req.url.substring(1);
 
@@ -16,39 +17,71 @@ const filePath = path.join(__dirname, file);
 fs.readFile(filePath, (err, data) => {
 
 if (err) {
-
   res.writeHead(404);
   res.end("Not Found");
-
   return;
 }
 
 let type = "text/html";
 
-if(file.endsWith(".css"))
+if (file.endsWith(".css"))
   type = "text/css";
 
-if(file.endsWith(".js"))
+if (file.endsWith(".js"))
   type = "application/javascript";
 
-if(file.endsWith(".png"))
+if (file.endsWith(".png"))
   type = "image/png";
 
-res.writeHead(200,{
-  "Content-Type":type
+if (file.endsWith(".jpg") ||
+    file.endsWith(".jpeg"))
+  type = "image/jpeg";
+
+res.writeHead(200, {
+  "Content-Type": type
 });
 
 res.end(data);
 
 });
-
 });
 
-const wss = new WebSocket.Server({
-server
-});
+const wss =
+new WebSocket.Server({ server });
 
 const rooms = new Map();
+
+function sendPeople(roomName) {
+
+const room = rooms.get(roomName);
+
+if (!room) return;
+
+const users = [];
+
+for (const [id, client] of room) {
+
+users.push({
+  id: id,
+  name: client.name
+});
+
+}
+
+for (const [id, client] of room) {
+
+if (client.readyState === WebSocket.OPEN) {
+
+  client.send(JSON.stringify({
+    type: "people",
+    users: users
+  }));
+
+}
+
+}
+
+}
 
 wss.on("connection", ws => {
 
@@ -60,59 +93,62 @@ ws.on("message", raw => {
 
 let data;
 
-try{
-
+try {
   data = JSON.parse(raw.toString());
-
-}catch(e){
-
+} catch (e) {
   return;
 }
 
 
-/* JOIN */
+/* JOIN ROOM */
 
-if(data.type === "join"){
+if (data.type === "join") {
 
   ws.id = data.id;
   ws.room = data.room;
   ws.name = data.name;
 
+  if (!rooms.has(ws.room)) {
 
-  if(!rooms.has(ws.room))
-    rooms.set(ws.room,new Map());
+    rooms.set(
+      ws.room,
+      new Map()
+    );
 
+  }
 
-  rooms.get(ws.room).set(
-    ws.id,
-    ws
-  );
+  rooms
+    .get(ws.room)
+    .set(ws.id, ws);
 
+  sendPeople(ws.room);
 
   return;
 }
 
 
-/* SEND TO SPECIFIC USER */
+/* KIRIM KE USER TERTENTU */
 
-if(data.to){
+if (data.to) {
 
   const room =
     rooms.get(ws.room);
 
-  if(!room) return;
+  if (!room) return;
 
   const target =
     room.get(data.to);
 
-  if(target &&
-     target.readyState === WebSocket.OPEN){
+  if (
+    target &&
+    target.readyState === WebSocket.OPEN
+  ) {
 
     target.send(
       JSON.stringify({
         ...data,
-        from:ws.id,
-        name:ws.name
+        from: ws.id,
+        name: ws.name
       })
     );
 
@@ -122,27 +158,27 @@ if(data.to){
 }
 
 
-/* CHAT BROADCAST */
+/* CHAT KE SEMUA USER LAIN */
 
-if(data.type === "chat"){
+if (data.type === "chat") {
 
   const room =
     rooms.get(ws.room);
 
-  if(!room) return;
+  if (!room) return;
 
-  for(const [id,client] of room){
+  for (const [id, client] of room) {
 
-    if(
+    if (
       id !== ws.id &&
       client.readyState === WebSocket.OPEN
-    ){
+    ) {
 
       client.send(
         JSON.stringify({
-          type:"chat",
-          name:ws.name,
-          msg:data.msg
+          type: "chat",
+          name: ws.name,
+          msg: data.msg
         })
       );
 
@@ -154,19 +190,24 @@ if(data.type === "chat"){
 
 });
 
-ws.on("close",() => {
+ws.on("close", () => {
 
-if(ws.room && ws.id){
+if (ws.room && ws.id) {
 
   const room =
     rooms.get(ws.room);
 
-  if(room){
+  if (room) {
 
     room.delete(ws.id);
 
-    if(room.size === 0)
+    sendPeople(ws.room);
+
+    if (room.size === 0) {
+
       rooms.delete(ws.room);
+
+    }
 
   }
 
@@ -179,7 +220,8 @@ if(ws.room && ws.id){
 server.listen(PORT, () => {
 
 console.log(
-"Server berjalan di port " + PORT
+"WebRTC WebSocket server berjalan di port " +
+PORT
 );
 
 });
