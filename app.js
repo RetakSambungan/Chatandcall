@@ -1,7 +1,3 @@
-// ================================
-// VIDEOCHAT - APP.JS
-// ================================
-
 const homePage = document.getElementById("homePage");
 const callPage = document.getElementById("callPage");
 
@@ -10,279 +6,685 @@ const roomInput = document.getElementById("roomInput");
 
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
 
-const homeStatus = document.getElementById("homeStatus");
-
-const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
+const localVideo = document.getElementById("localVideo");
 
 const waitingScreen = document.getElementById("waitingScreen");
 const waitingTitle = document.getElementById("waitingTitle");
 const waitingText = document.getElementById("waitingText");
 
-const copyLinkBtn = document.getElementById("copyLinkBtn");
-
 const peerName = document.getElementById("peerName");
 const callStatus = document.getElementById("callStatus");
 
-const muteBtn = document.getElementById("muteBtn");
-const cameraBtn = document.getElementById("cameraBtn");
-const hangupBtn = document.getElementById("hangupBtn");
-
-const chatBtn = document.getElementById("chatBtn");
 const chatPanel = document.getElementById("chatPanel");
-const closeChatBtn = document.getElementById("closeChatBtn");
-
 const messages = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
+
+const chatBtn = document.getElementById("chatBtn");
+const closeChatBtn = document.getElementById("closeChatBtn");
+const muteBtn = document.getElementById("muteBtn");
+const cameraBtn = document.getElementById("cameraBtn");
+const hangupBtn = document.getElementById("hangupBtn");
 
 const incomingCall = document.getElementById("incomingCall");
 const incomingName = document.getElementById("incomingName");
 const acceptBtn = document.getElementById("acceptBtn");
 const rejectBtn = document.getElementById("rejectBtn");
 
+const homeStatus = document.getElementById("homeStatus");
 const toast = document.getElementById("toast");
-
-
-// ================================
-// DATA
-// ================================
 
 let socket = null;
 let peerConnection = null;
-
 let localStream = null;
 
-let roomId = null;
 let myName = "";
-let peerUserName = "";
-
-let isCaller = false;
-let callAccepted = false;
-
-let microphoneEnabled = true;
-let cameraEnabled = true;
+let roomId = "";
+let myRole = "";
+let otherName = "";
 
 let pendingCandidates = [];
+let callAccepted = false;
 
-
-// ================================
-// WEBRTC
-// ================================
-
-let rtcConfig = {
-    iceServers: [
-        {
-            urls: "stun:stun.l.google.com:19302"
-        },
-        {
-            urls: "stun:stun1.l.google.com:19302"
-        }
-    ]
+const rtcConfig = {
+iceServers: [
+{
+urls: "stun:stun.l.google.com:19302"
+},
+{
+urls: "stun:stun1.l.google.com:19302"
+}
+]
 };
 
-
-// Ambil konfigurasi TURN jika tersedia
-async function loadRtcConfig() {
-
-    try {
-
-        const response = await fetch("/config");
-
-        if (!response.ok) {
-            return;
-        }
-
-        const config = await response.json();
-
-        if (
-            config &&
-            Array.isArray(config.iceServers) &&
-            config.iceServers.length > 0
-        ) {
-            rtcConfig = {
-                iceServers: config.iceServers
-            };
-        }
-
-    } catch (error) {
-
-        console.log("TURN config tidak tersedia.");
-
-    }
-}
-
-
-// ================================
+// ===============================
 // UTILITAS
-// ================================
+// ===============================
 
 function showToast(text) {
+toast.textContent = text;
+toast.classList.remove("hidden");
 
-    toast.textContent = text;
-    toast.classList.remove("hidden");
-
-    clearTimeout(showToast.timer);
-
-    showToast.timer = setTimeout(() => {
-        toast.classList.add("hidden");
-    }, 2500);
-}
-
-
-function setHomeStatus(text) {
-    homeStatus.textContent = text;
-}
-
-
-function showHome() {
-
-    homePage.classList.remove("hidden");
-    callPage.classList.add("hidden");
+setTimeout(() => {
+    toast.classList.add("hidden");
+}, 3000);
 
 }
 
+function showHomeStatus(text) {
+if (homeStatus) {
+homeStatus.textContent = text;
+}
+}
 
-function showCallPage() {
+function randomRoomId() {
+return Math.random().toString(36).substring(2, 10);
+}
 
-    homePage.classList.add("hidden");
-    callPage.classList.remove("hidden");
+function getRoomLink() {
+return window.location.origin + "/?room=" + encodeURIComponent(roomId);
+}
+
+function updateRoomLink() {
+const link = getRoomLink();
+
+waitingText.innerHTML =
+    "Bagikan link ini kepada teman:<br><br>" +
+    "<strong style='word-break:break-all'>" +
+    link +
+    "</strong>";
+
+copyLinkBtn.textContent = "🔗 Salin Link Panggilan";
 
 }
 
+function copyRoomLink() {
+const link = getRoomLink();
 
-function createRoomId() {
+navigator.clipboard.writeText(link)
+    .then(() => {
+        showToast("Link panggilan berhasil disalin");
+    })
+    .catch(() => {
+        const textarea = document.createElement("textarea");
+        textarea.value = link;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
 
-    if (
-        window.crypto &&
-        typeof window.crypto.randomUUID === "function"
-    ) {
-
-        return window.crypto
-            .randomUUID()
-            .replace(/-/g, "")
-            .substring(0, 12);
-
-    }
-
-    return Math.random()
-        .toString(36)
-        .substring(2, 14);
-
-}
-
-
-function getRoomFromUrl() {
-
-    const params = new URLSearchParams(window.location.search);
-
-    return params.get("room") || "";
+        showToast("Link panggilan berhasil disalin");
+    });
 
 }
 
+// ===============================
+// CEK BROWSER
+// ===============================
 
-function updateUrl() {
+function checkBrowser() {
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+alert(
+"Browser ini tidak mendukung kamera/mikrofon.\n" +
+"Gunakan Chrome atau browser modern."
+);
 
-    const url =
-        window.location.origin +
-        window.location.pathname +
-        "?room=" +
-        encodeURIComponent(roomId);
+    return false;
+}
 
-    window.history.replaceState({}, "", url);
+if (!window.WebSocket) {
+    alert("Browser tidak mendukung WebSocket.");
+    return false;
+}
+
+if (!window.RTCPeerConnection) {
+    alert("Browser tidak mendukung video call WebRTC.");
+    return false;
+}
+
+return true;
 
 }
 
+// ===============================
+// KAMERA + MIKROFON
+// ===============================
 
-function clearCallUrl() {
-
-    window.history.replaceState(
-        {},
-        "",
-        window.location.pathname
-    );
-
-}
-
-
-// ================================
-// NAMA
-// ================================
-
-function getName() {
-
-    const name = nameInput.value.trim();
-
-    if (!name) {
-
-        setHomeStatus("Silakan masukkan nama Anda.");
-
-        nameInput.focus();
-
-        return null;
-    }
-
-    myName = name.substring(0, 30);
-
-    return myName;
-}
-
-
-// ================================
-// BUAT PANGGILAN
-// ================================
-
-createBtn.addEventListener("click", async () => {
-
-    const name = getName();
-
-    if (!name) {
-        return;
-    }
-
-    roomId = createRoomId();
-
-    isCaller = true;
-    callAccepted = false;
-
-    roomInput.value = roomId;
-
-    updateUrl();
-
-    await startCallPage();
-
-    waitingTitle.textContent = "Menunggu teman...";
-    waitingText.textContent =
-        "Bagikan link panggilan kepada teman Anda.";
-
-    copyLinkBtn.classList.remove("hidden");
-
-    peerName.textContent = "Menunggu teman...";
-    callStatus.textContent = "Menunggu panggilan masuk...";
-
-    connectSocket();
-
+async function startCamera() {
+try {
+localStream = await navigator.mediaDevices.getUserMedia({
+video: true,
+audio: true
 });
 
+    localVideo.srcObject = localStream;
 
-// ================================
-// GABUNG PANGGILAN
-// ================================
+    return true;
 
-joinBtn.addEventListener("click", async () => {
+} catch (error) {
+    console.error("Camera error:", error);
 
-    const name = getName();
+    alert(
+        "Kamera atau mikrofon tidak diizinkan.\n\n" +
+        "Silakan izinkan kamera dan mikrofon di browser."
+    );
 
-    if (!name) {
-        return;
+    return false;
+}
+
+}
+
+// ===============================
+// WEBSOCKET
+// ===============================
+
+function connectSocket() {
+return new Promise((resolve, reject) => {
+
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    const socketUrl =
+        protocol + "//" + window.location.host;
+
+    socket = new WebSocket(socketUrl);
+
+    socket.onopen = () => {
+        console.log("WebSocket connected");
+
+        socket.send(JSON.stringify({
+            type: "join",
+            roomId: roomId,
+            name: myName
+        }));
+
+        resolve();
+    };
+
+    socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+
+        showToast("Gagal terhubung ke server");
+
+        reject(error);
+    };
+
+    socket.onclose = () => {
+        console.log("WebSocket disconnected");
+    };
+
+    socket.onmessage = async (event) => {
+
+        try {
+            const data = JSON.parse(event.data);
+
+            await handleSignal(data);
+
+        } catch (error) {
+            console.error("Signal error:", error);
+        }
+    };
+});
+
+}
+
+// ===============================
+// WEBRTC
+// ===============================
+
+function createPeerConnection() {
+
+if (peerConnection) {
+    peerConnection.close();
+}
+
+peerConnection = new RTCPeerConnection(rtcConfig);
+
+if (localStream) {
+
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
+}
+
+peerConnection.ontrack = (event) => {
+
+    if (event.streams && event.streams[0]) {
+
+        remoteVideo.srcObject = event.streams[0];
+
+        waitingScreen.classList.add("hidden");
+
+        callStatus.textContent = "Terhubung";
+    }
+};
+
+peerConnection.onicecandidate = (event) => {
+
+    if (event.candidate && socket) {
+
+        socket.send(JSON.stringify({
+            type: "candidate",
+            candidate: event.candidate
+        }));
+    }
+};
+
+peerConnection.onconnectionstatechange = () => {
+
+    console.log(
+        "Connection state:",
+        peerConnection.connectionState
+    );
+
+    if (
+        peerConnection.connectionState === "connected"
+    ) {
+        waitingScreen.classList.add("hidden");
+
+        callStatus.textContent = "Terhubung";
     }
 
-    const enteredRoom = roomInput.value.trim();
+    if (
+        peerConnection.connectionState === "disconnected" ||
+        peerConnection.connectionState === "failed"
+    ) {
+        callStatus.textContent = "Koneksi terputus";
+    }
+};
 
-    if (!enteredRoom) {
+return peerConnection;
 
-        setHomeStatus(
+}
+
+// ===============================
+// BUAT OFFER
+// ===============================
+
+async function createOffer() {
+
+if (!peerConnection) {
+    createPeerConnection();
+}
+
+const offer = await peerConnection.createOffer();
+
+await peerConnection.setLocalDescription(offer);
+
+socket.send(JSON.stringify({
+    type: "offer",
+    offer: offer
+}));
+
+}
+
+// ===============================
+// TERIMA OFFER
+// ===============================
+
+async function receiveOffer(offer) {
+
+if (!peerConnection) {
+    createPeerConnection();
+}
+
+await peerConnection.setRemoteDescription(
+    new RTCSessionDescription(offer)
+);
+
+for (const candidate of pendingCandidates) {
+
+    try {
+        await peerConnection.addIceCandidate(candidate);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+pendingCandidates = [];
+
+const answer =
+    await peerConnection.createAnswer();
+
+await peerConnection.setLocalDescription(answer);
+
+socket.send(JSON.stringify({
+    type: "answer",
+    answer: answer
+}));
+
+}
+
+// ===============================
+// TERIMA ANSWER
+// ===============================
+
+async function receiveAnswer(answer) {
+
+if (!peerConnection) {
+    return;
+}
+
+await peerConnection.setRemoteDescription(
+    new RTCSessionDescription(answer)
+);
+
+for (const candidate of pendingCandidates) {
+
+    try {
+        await peerConnection.addIceCandidate(candidate);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+pendingCandidates = [];
+
+}
+
+// ===============================
+// ICE CANDIDATE
+// ===============================
+
+async function receiveCandidate(candidate) {
+
+const iceCandidate =
+    new RTCIceCandidate(candidate);
+
+if (
+    peerConnection &&
+    peerConnection.remoteDescription
+) {
+
+    try {
+        await peerConnection.addIceCandidate(
+            iceCandidate
+        );
+    } catch (error) {
+        console.error(error);
+    }
+
+} else {
+
+    pendingCandidates.push(iceCandidate);
+}
+
+}
+
+// ===============================
+// SIGNAL SERVER
+// ===============================
+
+async function handleSignal(data) {
+
+console.log("Signal:", data);
+
+switch (data.type) {
+
+    case "joined":
+
+        myRole = data.role;
+
+        if (myRole === "caller") {
+
+            waitingTitle.textContent =
+                "Menunggu teman...";
+
+            waitingText.textContent =
+                "Bagikan link panggilan kepada teman Anda.";
+
+            updateRoomLink();
+
+            callStatus.textContent =
+                "Menunggu teman";
+        }
+
+        if (myRole === "callee") {
+
+            callStatus.textContent =
+                "Panggilan masuk";
+        }
+
+        break;
+
+
+    case "incoming":
+
+        otherName = data.name || "Teman";
+
+        incomingName.textContent =
+            otherName;
+
+        incomingCall.classList.remove("hidden");
+
+        callStatus.textContent =
+            "Panggilan masuk";
+
+        break;
+
+
+    case "ringing":
+
+        otherName = data.name || "Teman";
+
+        peerName.textContent =
+            otherName;
+
+        callStatus.textContent =
+            "Memanggil...";
+
+        waitingTitle.textContent =
+            "Memanggil " + otherName + "...";
+
+        updateRoomLink();
+
+        break;
+
+
+    case "accepted":
+
+        callAccepted = true;
+
+        otherName = data.name || otherName;
+
+        peerName.textContent =
+            otherName;
+
+        callStatus.textContent =
+            "Menghubungkan...";
+
+        waitingTitle.textContent =
+            "Menghubungkan...";
+
+        createPeerConnection();
+
+        await createOffer();
+
+        break;
+
+
+    case "rejected":
+
+        callStatus.textContent =
+            "Panggilan ditolak";
+
+        showToast(
+            "Teman menolak panggilan"
+        );
+
+        break;
+
+
+    case "offer":
+
+        await receiveOffer(data.offer);
+
+        break;
+
+
+    case "answer":
+
+        await receiveAnswer(data.answer);
+
+        break;
+
+
+    case "candidate":
+
+        await receiveCandidate(data.candidate);
+
+        break;
+
+
+    case "chat":
+
+        addMessage(
+            data.name || "Teman",
+            data.message,
+            false
+        );
+
+        break;
+
+
+    case "leave":
+
+        callStatus.textContent =
+            "Teman keluar dari panggilan";
+
+        waitingScreen.classList.remove("hidden");
+
+        showToast(
+            "Teman telah keluar"
+        );
+
+        break;
+
+
+    case "full":
+
+        alert(
+            "Panggilan penuh.\n" +
+            "Maksimal 2 orang."
+        );
+
+        cleanupCall();
+
+        break;
+
+
+    case "error":
+
+        showToast(
+            data.message || "Terjadi kesalahan"
+        );
+
+        break;
+}
+
+}
+
+// ===============================
+// MULAI PANGGILAN
+// ===============================
+
+async function startCall(room) {
+
+if (!checkBrowser()) {
+    return;
+}
+
+myName =
+    nameInput.value.trim();
+
+if (!myName) {
+
+    alert("Masukkan nama Anda terlebih dahulu.");
+
+    nameInput.focus();
+
+    return;
+}
+
+roomId = room || randomRoomId();
+
+window.history.replaceState(
+    {},
+    "",
+    "?room=" + encodeURIComponent(roomId)
+);
+
+homePage.classList.add("hidden");
+callPage.classList.remove("hidden");
+
+waitingScreen.classList.remove("hidden");
+
+peerName.textContent =
+    "Menunggu...";
+
+callStatus.textContent =
+    "Mengaktifkan kamera...";
+
+const cameraStarted =
+    await startCamera();
+
+if (!cameraStarted) {
+
+    cleanupCall();
+
+    return;
+}
+
+callStatus.textContent =
+    "Menghubungkan ke server...";
+
+try {
+
+    await connectSocket();
+
+} catch (error) {
+
+    alert(
+        "Tidak dapat terhubung ke server."
+    );
+
+    cleanupCall();
+}
+
+}
+
+// ===============================
+// BUAT PANGGILAN
+// ===============================
+
+createBtn.addEventListener(
+"click",
+async () => {
+
+    await startCall();
+}
+
+);
+
+// ===============================
+// GABUNG PANGGILAN
+// ===============================
+
+joinBtn.addEventListener(
+"click",
+async () => {
+
+    const value =
+        roomInput.value.trim();
+
+    if (!value) {
+
+        alert(
             "Masukkan kode atau link panggilan."
         );
 
@@ -291,1252 +693,402 @@ joinBtn.addEventListener("click", async () => {
         return;
     }
 
-    roomId = extractRoomId(enteredRoom);
+    let room = value;
 
-    if (!roomId) {
+    try {
 
-        setHomeStatus(
+        if (value.includes("http")) {
+
+            const url =
+                new URL(value);
+
+            room =
+                url.searchParams.get("room");
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Input bukan URL:",
+            error
+        );
+    }
+
+    if (!room) {
+
+        alert(
             "Kode panggilan tidak valid."
         );
 
         return;
     }
 
-    isCaller = false;
-    callAccepted = false;
-
-    updateUrl();
-
-    await startCallPage();
-
-    connectSocket();
-
-});
-
-
-// ================================
-// EKSTRAK ROOM DARI LINK
-// ================================
-
-function extractRoomId(value) {
-
-    try {
-
-        if (
-            value.startsWith("http://") ||
-            value.startsWith("https://")
-        ) {
-
-            const url = new URL(value);
-
-            return url.searchParams.get("room") || "";
-
-        }
-
-    } catch (error) {
-
-        return "";
-
-    }
-
-    return value
-        .replace(/\s/g, "")
-        .replace(/[^a-zA-Z0-9_-]/g, "")
-        .substring(0, 50);
-
+    await startCall(room);
 }
 
-
-// ================================
-// MULAI HALAMAN CALL
-// ================================
-
-async function startCallPage() {
-
-    showCallPage();
-
-    try {
-
-        await startLocalCamera();
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Kamera/mikrofon tidak dapat digunakan."
-        );
-
-        callStatus.textContent =
-            "Kamera/mikrofon belum diizinkan.";
-    }
-
-}
-
-
-// ================================
-// KAMERA + MIKROFON
-// ================================
-
-async function startLocalCamera() {
-
-    if (localStream) {
-        return;
-    }
-
-    localStream =
-        await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: {
-                    ideal: 1280
-                },
-                height: {
-                    ideal: 720
-                },
-                facingMode: "user"
-            },
-            audio: true
-        });
-
-    localVideo.srcObject = localStream;
-
-}
-
-
-// ================================
-// WEBSOCKET
-// ================================
-
-function connectSocket() {
-
-    if (socket) {
-
-        try {
-            socket.close();
-        } catch (error) {}
-
-    }
-
-    const protocol =
-        window.location.protocol === "https:"
-            ? "wss:"
-            : "ws:";
-
-    socket = new WebSocket(
-        protocol +
-        "//" +
-        window.location.host
-    );
-
-
-    socket.addEventListener("open", () => {
-
-        console.log("WebSocket terhubung.");
-
-        sendSignal({
-            type: "join",
-            room: roomId,
-            name: myName
-        });
-
-    });
-
-
-    socket.addEventListener("message", async event => {
-
-        try {
-
-            const message =
-                JSON.parse(event.data);
-
-            await handleSignal(message);
-
-        } catch (error) {
-
-            console.error(
-                "Pesan signaling error:",
-                error
-            );
-
-        }
-
-    });
-
-
-    socket.addEventListener("close", () => {
-
-        console.log(
-            "WebSocket terputus."
-        );
-
-    });
-
-
-    socket.addEventListener("error", error => {
-
-        console.error(
-            "WebSocket error:",
-            error
-        );
-
-        showToast(
-            "Koneksi server bermasalah."
-        );
-
-    });
-
-}
-
-
-// ================================
-// KIRIM SIGNAL
-// ================================
-
-function sendSignal(data) {
-
-    if (
-        socket &&
-        socket.readyState === WebSocket.OPEN
-    ) {
-
-        socket.send(
-            JSON.stringify(data)
-        );
-
-    }
-
-}
-
-
-// ================================
-// TERIMA SIGNAL
-// ================================
-
-async function handleSignal(message) {
-
-    switch (message.type) {
-
-
-        // ----------------------------
-        // BERHASIL MASUK ROOM
-        // ----------------------------
-
-        case "joined":
-
-            if (message.role === "caller") {
-
-                isCaller = true;
-
-                waitingTitle.textContent =
-                    "Menunggu teman...";
-
-                waitingText.textContent =
-                    "Bagikan link panggilan kepada teman Anda.";
-
-                callStatus.textContent =
-                    "Menunggu teman...";
-
-            } else {
-
-                isCaller = false;
-
-                waitingTitle.textContent =
-                    "Panggilan masuk";
-
-                waitingText.textContent =
-                    "Menunggu Anda menerima panggilan.";
-
-            }
-
-            break;
-
-
-        // ----------------------------
-        // PANGGILAN MASUK
-        // ----------------------------
-
-        case "incoming":
-
-            peerUserName =
-                message.name || "Teman";
-
-            incomingName.textContent =
-                peerUserName;
-
-            peerName.textContent =
-                peerUserName;
-
-            callStatus.textContent =
-                "Panggilan masuk...";
-
-            incomingCall.classList.remove(
-                "hidden"
-            );
-
-            break;
-
-
-        // ----------------------------
-        // TEMAN SEDANG MENELEPON
-        // ----------------------------
-
-        case "ringing":
-
-            peerUserName =
-                message.name || "Teman";
-
-            peerName.textContent =
-                peerUserName;
-
-            callStatus.textContent =
-                "Memanggil...";
-
-            waitingTitle.textContent =
-                "Memanggil teman...";
-
-            waitingText.textContent =
-                "Menunggu teman menerima panggilan.";
-
-            break;
-
-
-        // ----------------------------
-        // PANGGILAN DITERIMA
-        // ----------------------------
-
-        case "accepted":
-
-            callAccepted = true;
-
-            peerUserName =
-                message.name || peerUserName || "Teman";
-
-            peerName.textContent =
-                peerUserName;
-
-            callStatus.textContent =
-                "Menghubungkan...";
-
-            waitingScreen.classList.add(
-                "hidden"
-            );
-
-            await createPeerConnection();
-
-            await createOffer();
-
-            break;
-
-
-        // ----------------------------
-        // PANGGILAN DITOLAK
-        // ----------------------------
-
-        case "rejected":
-
-            callStatus.textContent =
-                "Panggilan ditolak.";
-
-            waitingTitle.textContent =
-                "Panggilan ditolak";
-
-            waitingText.textContent =
-                "Teman menolak panggilan.";
-
-            showToast(
-                "Panggilan ditolak."
-            );
-
-            break;
-
-
-        // ----------------------------
-        // OFFER
-        // ----------------------------
-
-        case "offer":
-
-            waitingScreen.classList.add(
-                "hidden"
-            );
-
-            await createPeerConnection();
-
-            await peerConnection.setRemoteDescription(
-                new RTCSessionDescription(
-                    message.offer
-                )
-            );
-
-            await flushPendingCandidates();
-
-            const answer =
-                await peerConnection.createAnswer();
-
-            await peerConnection.setLocalDescription(
-                answer
-            );
-
-            sendSignal({
-                type: "answer",
-                room: roomId,
-                answer: answer
-            });
-
-            callStatus.textContent =
-                "Menghubungkan video...";
-
-            break;
-
-
-        // ----------------------------
-        // ANSWER
-        // ----------------------------
-
-        case "answer":
-
-            if (!peerConnection) {
-                return;
-            }
-
-            await peerConnection.setRemoteDescription(
-                new RTCSessionDescription(
-                    message.answer
-                )
-            );
-
-            await flushPendingCandidates();
-
-            callStatus.textContent =
-                "Video call terhubung.";
-
-            break;
-
-
-        // ----------------------------
-        // ICE CANDIDATE
-        // ----------------------------
-
-        case "candidate":
-
-            if (!message.candidate) {
-                return;
-            }
-
-            if (
-                peerConnection &&
-                peerConnection.remoteDescription
-            ) {
-
-                try {
-
-                    await peerConnection.addIceCandidate(
-                        new RTCIceCandidate(
-                            message.candidate
-                        )
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "ICE candidate error:",
-                        error
-                    );
-
-                }
-
-            } else {
-
-                pendingCandidates.push(
-                    message.candidate
-                );
-
-            }
-
-            break;
-
-
-        // ----------------------------
-        // CHAT
-        // ----------------------------
-
-        case "chat":
-
-            addMessage(
-                message.name || "Teman",
-                message.text || "",
-                false
-            );
-
-            break;
-
-
-        // ----------------------------
-        // TEMAN KELUAR
-        // ----------------------------
-
-        case "leave":
-
-            handlePeerLeft();
-
-            break;
-
-
-        // ----------------------------
-        // ROOM PENUH
-        // ----------------------------
-
-        case "full":
-
-            showToast(
-                "Panggilan ini sudah penuh."
-            );
-
-            callStatus.textContent =
-                "Room sudah digunakan 2 orang.";
-
-            setTimeout(() => {
-                hangUp(false);
-            }, 1500);
-
-            break;
-
-
-        // ----------------------------
-        // ERROR
-        // ----------------------------
-
-        case "error":
-
-            showToast(
-                message.message ||
-                "Terjadi kesalahan."
-            );
-
-            break;
-
-    }
-
-}
-
-
-// ================================
-// PEER CONNECTION
-// ================================
-
-async function createPeerConnection() {
-
-    if (peerConnection) {
-        return;
-    }
-
-    peerConnection =
-        new RTCPeerConnection(
-            rtcConfig
-        );
-
-
-    // Tambahkan kamera + mikrofon
-    if (localStream) {
-
-        localStream
-            .getTracks()
-            .forEach(track => {
-
-                peerConnection.addTrack(
-                    track,
-                    localStream
-                );
-
-            });
-
-    }
-
-
-    // Video teman
-    peerConnection.addEventListener(
-        "track",
-        event => {
-
-            if (
-                event.streams &&
-                event.streams[0]
-            ) {
-
-                remoteVideo.srcObject =
-                    event.streams[0];
-
-                waitingScreen.classList.add(
-                    "hidden"
-                );
-
-                callStatus.textContent =
-                    "Terhubung";
-
-            }
-
-        }
-    );
-
-
-    // ICE
-    peerConnection.addEventListener(
-        "icecandidate",
-        event => {
-
-            if (event.candidate) {
-
-                sendSignal({
-                    type: "candidate",
-                    room: roomId,
-                    candidate: event.candidate
-                });
-
-            }
-
-        }
-    );
-
-
-    // Status koneksi
-    peerConnection.addEventListener(
-        "connectionstatechange",
-        () => {
-
-            const state =
-                peerConnection.connectionState;
-
-            console.log(
-                "WebRTC:",
-                state
-            );
-
-            if (state === "connected") {
-
-                waitingScreen.classList.add(
-                    "hidden"
-                );
-
-                callStatus.textContent =
-                    "Terhubung";
-
-            }
-
-            if (
-                state === "disconnected" ||
-                state === "failed"
-            ) {
-
-                callStatus.textContent =
-                    "Koneksi terputus.";
-
-            }
-
-        }
-    );
-
-}
-
-
-// ================================
-// BUAT OFFER
-// ================================
-
-async function createOffer() {
-
-    if (!peerConnection) {
-        return;
-    }
-
-    const offer =
-        await peerConnection.createOffer();
-
-    await peerConnection.setLocalDescription(
-        offer
-    );
-
-    sendSignal({
-        type: "offer",
-        room: roomId,
-        offer: offer
-    });
-
-}
-
-
-// ================================
-// ICE QUEUE
-// ================================
-
-async function flushPendingCandidates() {
-
-    if (
-        !peerConnection ||
-        !peerConnection.remoteDescription
-    ) {
-        return;
-    }
-
-    for (
-        const candidate
-        of pendingCandidates
-    ) {
-
-        try {
-
-            await peerConnection.addIceCandidate(
-                new RTCIceCandidate(candidate)
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Queued ICE error:",
-                error
-            );
-
-        }
-
-    }
-
-    pendingCandidates = [];
-
-}
-
-
-// ================================
-// TERIMA PANGGILAN
-// ================================
-
-acceptBtn.addEventListener(
-    "click",
-    async () => {
-
-        incomingCall.classList.add(
-            "hidden"
-        );
-
-        callAccepted = true;
-
-        waitingScreen.classList.add(
-            "hidden"
-        );
-
-        callStatus.textContent =
-            "Menerima panggilan...";
-
-        sendSignal({
-            type: "accept",
-            room: roomId,
-            name: myName
-        });
-
-    }
 );
 
-
-// ================================
-// TOLAK PANGGILAN
-// ================================
-
-rejectBtn.addEventListener(
-    "click",
-    () => {
-
-        incomingCall.classList.add(
-            "hidden"
-        );
-
-        sendSignal({
-            type: "reject",
-            room: roomId
-        });
-
-        callStatus.textContent =
-            "Panggilan ditolak.";
-
-        waitingTitle.textContent =
-            "Panggilan ditolak";
-
-        waitingText.textContent =
-            "Anda menolak panggilan.";
-
-    }
-);
-
-
-// ================================
-// MIKROFON
-// ================================
-
-muteBtn.addEventListener(
-    "click",
-    () => {
-
-        if (!localStream) {
-            return;
-        }
-
-        const tracks =
-            localStream.getAudioTracks();
-
-        if (tracks.length === 0) {
-            return;
-        }
-
-        microphoneEnabled =
-            !microphoneEnabled;
-
-        tracks.forEach(track => {
-
-            track.enabled =
-                microphoneEnabled;
-
-        });
-
-        muteBtn.textContent =
-            microphoneEnabled
-                ? "🎤"
-                : "🔇";
-
-        muteBtn.classList.toggle(
-            "active",
-            !microphoneEnabled
-        );
-
-    }
-);
-
-
-// ================================
-// KAMERA
-// ================================
-
-cameraBtn.addEventListener(
-    "click",
-    () => {
-
-        if (!localStream) {
-            return;
-        }
-
-        const tracks =
-            localStream.getVideoTracks();
-
-        if (tracks.length === 0) {
-            return;
-        }
-
-        cameraEnabled =
-            !cameraEnabled;
-
-        tracks.forEach(track => {
-
-            track.enabled =
-                cameraEnabled;
-
-        });
-
-        cameraBtn.textContent =
-            cameraEnabled
-                ? "📹"
-                : "🚫";
-
-        cameraBtn.classList.toggle(
-            "active",
-            !cameraEnabled
-        );
-
-    }
-);
-
-
-// ================================
-// CHAT BUKA/TUTUP
-// ================================
-
-chatBtn.addEventListener(
-    "click",
-    () => {
-
-        chatPanel.classList.toggle(
-            "hidden"
-        );
-
-        if (
-            !chatPanel.classList.contains(
-                "hidden"
-            )
-        ) {
-
-            messageInput.focus();
-
-        }
-
-    }
-);
-
-
-closeChatBtn.addEventListener(
-    "click",
-    () => {
-
-        chatPanel.classList.add(
-            "hidden"
-        );
-
-    }
-);
-
-
-// ================================
-// KIRIM CHAT
-// ================================
-
-function sendChat() {
-
-    const text =
-        messageInput.value.trim();
-
-    if (!text) {
-        return;
-    }
-
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
-
-        showToast(
-            "Belum terhubung."
-        );
-
-        return;
-    }
-
-    sendSignal({
-        type: "chat",
-        room: roomId,
-        name: myName,
-        text: text.substring(0, 500)
-    });
-
-    addMessage(
-        myName,
-        text,
-        true
-    );
-
-    messageInput.value = "";
-
-    messageInput.focus();
-
-}
-
-
-sendBtn.addEventListener(
-    "click",
-    sendChat
-);
-
-
-messageInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Enter") {
-
-            event.preventDefault();
-
-            sendChat();
-
-        }
-
-    }
-);
-
-
-// ================================
-// TAMPILKAN CHAT
-// ================================
-
-function addMessage(
-    name,
-    text,
-    mine
-) {
-
-    if (!text) {
-        return;
-    }
-
-    const message =
-        document.createElement("div");
-
-    message.className =
-        "message " +
-        (mine ? "me" : "other");
-
-
-    const nameElement =
-        document.createElement("span");
-
-    nameElement.className =
-        "message-name";
-
-    nameElement.textContent =
-        mine ? "Anda" : name;
-
-
-    const textElement =
-        document.createElement("div");
-
-    textElement.textContent =
-        text;
-
-
-    message.appendChild(
-        nameElement
-    );
-
-    message.appendChild(
-        textElement
-    );
-
-    messages.appendChild(
-        message
-    );
-
-
-    messages.scrollTop =
-        messages.scrollHeight;
-
-}
-
-
-// ================================
-// SALIN LINK
-// ================================
+// ===============================
+// COPY LINK
+// ===============================
 
 copyLinkBtn.addEventListener(
-    "click",
-    async () => {
-
-        const link =
-            window.location.origin +
-            window.location.pathname +
-            "?room=" +
-            encodeURIComponent(roomId);
-
-        try {
-
-            await navigator.clipboard.writeText(
-                link
-            );
-
-            showToast(
-                "Link panggilan disalin."
-            );
-
-        } catch (error) {
-
-            // Cadangan untuk browser lama
-            const textarea =
-                document.createElement("textarea");
-
-            textarea.value = link;
-
-            document.body.appendChild(
-                textarea
-            );
-
-            textarea.select();
-
-            document.execCommand(
-                "copy"
-            );
-
-            textarea.remove();
-
-            showToast(
-                "Link panggilan disalin."
-            );
-
-        }
-
-    }
+"click",
+copyRoomLink
 );
 
+// ===============================
+// INCOMING CALL
+// ===============================
 
-// ================================
-// TEMAN KELUAR
-// ================================
+acceptBtn.addEventListener(
+"click",
+async () => {
 
-function handlePeerLeft() {
+    incomingCall.classList.add("hidden");
 
-    peerName.textContent =
-        "Teman keluar";
+    callAccepted = true;
 
     callStatus.textContent =
-        "Teman telah meninggalkan panggilan.";
+        "Mengaktifkan kamera...";
 
-    waitingScreen.classList.remove(
-        "hidden"
-    );
+    const cameraStarted =
+        await startCamera();
 
-    waitingTitle.textContent =
-        "Teman keluar";
-
-    waitingText.textContent =
-        "Anda dapat membagikan link lagi.";
-
-    remoteVideo.srcObject = null;
-
-    if (peerConnection) {
-
-        try {
-            peerConnection.close();
-        } catch (error) {}
-
-        peerConnection = null;
-
+    if (!cameraStarted) {
+        return;
     }
 
-    callAccepted = false;
+    peerName.textContent =
+        otherName;
+
+    callStatus.textContent =
+        "Menghubungkan...";
+
+    createPeerConnection();
+
+    socket.send(JSON.stringify({
+        type: "accept"
+    }));
+}
+
+);
+
+rejectBtn.addEventListener(
+"click",
+() => {
+
+    incomingCall.classList.add("hidden");
+
+    if (socket) {
+
+        socket.send(JSON.stringify({
+            type: "reject"
+        }));
+    }
+
+    callStatus.textContent =
+        "Panggilan ditolak";
+
+    showToast(
+        "Panggilan ditolak"
+    );
+}
+
+);
+
+// ===============================
+// CHAT
+// ===============================
+
+function addMessage(name, text, mine) {
+
+const message =
+    document.createElement("div");
+
+message.className =
+    mine
+        ? "message mine"
+        : "message";
+
+message.innerHTML =
+    "<strong>" +
+    escapeHtml(name) +
+    "</strong><br>" +
+    escapeHtml(text);
+
+messages.appendChild(message);
+
+messages.scrollTop =
+    messages.scrollHeight;
 
 }
 
+function escapeHtml(text) {
 
-// ================================
-// HANG UP
-// ================================
+const div =
+    document.createElement("div");
 
-hangupBtn.addEventListener(
-    "click",
-    () => {
-        hangUp(true);
-    }
+div.textContent =
+    text;
+
+return div.innerHTML;
+
+}
+
+function sendMessage() {
+
+const text =
+    messageInput.value.trim();
+
+if (!text || !socket) {
+    return;
+}
+
+socket.send(JSON.stringify({
+    type: "chat",
+    message: text,
+    name: myName
+}));
+
+addMessage(
+    myName,
+    text,
+    true
 );
 
+messageInput.value = "";
 
-function hangUp(sendLeave = true) {
+messageInput.focus();
 
-    if (sendLeave) {
+}
 
-        sendSignal({
-            type: "leave",
-            room: roomId
-        });
+sendBtn.addEventListener(
+"click",
+sendMessage
+);
 
+messageInput.addEventListener(
+"keydown",
+event => {
+
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+);
+
+// ===============================
+// CHAT PANEL
+// ===============================
+
+chatBtn.addEventListener(
+"click",
+() => {
+
+    chatPanel.classList.toggle("open");
+}
+
+);
+
+closeChatBtn.addEventListener(
+"click",
+() => {
+
+    chatPanel.classList.remove("open");
+}
+
+);
+
+// ===============================
+// MUTE
+// ===============================
+
+muteBtn.addEventListener(
+"click",
+() => {
+
+    if (!localStream) {
+        return;
     }
 
+    const audioTracks =
+        localStream.getAudioTracks();
 
-    if (peerConnection) {
-
-        try {
-            peerConnection.close();
-        } catch (error) {}
-
-        peerConnection = null;
-
+    if (!audioTracks.length) {
+        return;
     }
 
+    audioTracks[0].enabled =
+        !audioTracks[0].enabled;
 
-    if (localStream) {
+    muteBtn.textContent =
+        audioTracks[0].enabled
+            ? "🎤"
+            : "🔇";
 
-        localStream
-            .getTracks()
-            .forEach(track => {
-                track.stop();
-            });
+    showToast(
+        audioTracks[0].enabled
+            ? "Mikrofon aktif"
+            : "Mikrofon dimatikan"
+    );
+}
 
-        localStream = null;
+);
 
+// ===============================
+// CAMERA
+// ===============================
+
+cameraBtn.addEventListener(
+"click",
+() => {
+
+    if (!localStream) {
+        return;
     }
 
+    const videoTracks =
+        localStream.getVideoTracks();
 
-    if (remoteVideo) {
-        remoteVideo.srcObject = null;
+    if (!videoTracks.length) {
+        return;
     }
 
-    if (localVideo) {
-        localVideo.srcObject = null;
-    }
+    videoTracks[0].enabled =
+        !videoTracks[0].enabled;
 
+    cameraBtn.textContent =
+        videoTracks[0].enabled
+            ? "📹"
+            : "🚫";
+
+    showToast(
+        videoTracks[0].enabled
+            ? "Kamera aktif"
+            : "Kamera dimatikan"
+    );
+}
+
+);
+
+// ===============================
+// HANG UP
+// ===============================
+
+hangupBtn.addEventListener(
+"click",
+() => {
 
     if (socket) {
 
         try {
-            socket.close();
-        } catch (error) {}
 
-        socket = null;
+            socket.send(JSON.stringify({
+                type: "leave"
+            }));
 
+        } catch (error) {
+
+            console.error(error);
+        }
     }
 
+    cleanupCall();
+}
 
-    incomingCall.classList.add(
-        "hidden"
-    );
+);
 
-    chatPanel.classList.add(
-        "hidden"
-    );
+// ===============================
+// BERSIHKAN PANGGILAN
+// ===============================
 
-    waitingScreen.classList.remove(
-        "hidden"
-    );
+function cleanupCall() {
 
-    pendingCandidates = [];
+if (peerConnection) {
 
-    callAccepted = false;
+    peerConnection.close();
 
-    microphoneEnabled = true;
-    cameraEnabled = true;
+    peerConnection = null;
+}
 
-    muteBtn.textContent = "🎤";
-    cameraBtn.textContent = "📹";
+if (localStream) {
 
-    clearCallUrl();
+    localStream.getTracks()
+        .forEach(track => track.stop());
 
-    showHome();
+    localStream = null;
+}
+
+if (socket) {
+
+    try {
+        socket.close();
+    } catch (error) {
+        console.error(error);
+    }
+
+    socket = null;
+}
+
+remoteVideo.srcObject = null;
+localVideo.srcObject = null;
+
+pendingCandidates = [];
+
+callAccepted = false;
+
+incomingCall.classList.add("hidden");
+
+chatPanel.classList.remove("open");
+
+messages.innerHTML = "";
+
+window.history.replaceState(
+    {},
+    "",
+    window.location.pathname
+);
+
+callPage.classList.add("hidden");
+homePage.classList.remove("hidden");
+
+showHomeStatus("");
+
+callStatus.textContent =
+    "Menghubungkan...";
+
+peerName.textContent =
+    "Menunggu...";
 
 }
 
+// ===============================
+// LINK ROOM OTOMATIS
+// ===============================
 
-// ================================
-// LINK ROOM SAAT HALAMAN DIBUKA
-// ================================
+window.addEventListener(
+"load",
+() => {
 
-const roomFromUrl =
-    getRoomFromUrl();
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-if (roomFromUrl) {
+    const room =
+        params.get("room");
 
-    roomInput.value =
-        roomFromUrl;
+    if (room) {
 
+        roomInput.value =
+            room;
+
+        showHomeStatus(
+            "Link panggilan ditemukan. Masukkan nama lalu tekan Gabung Panggilan."
+        );
+    }
 }
 
-
-// ================================
-// LOAD CONFIG
-// ================================
-
-loadRtcConfig();
-
-
-// ================================
-// CEK BROWSER
-// ================================
-
-if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-) {
-
-    setHomeStatus(
-        "Browser ini tidak mendukung video call."
-    );
-
-}
+);
