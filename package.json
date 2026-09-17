@@ -1,7 +1,7 @@
 {
   "name": "chatandcall",
-  "version": "1.0.0",
-  "description": "Chat and video call using WebRTC and WebSocket",
+  "version": "2.0.0",
+  "description": "Chat and WebRTC video call",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
