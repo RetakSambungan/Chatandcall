@@ -1,325 +1,916 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MasGuntoro Chat</title><style>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+>
+
+<title>MasGuntoro Chat</title>
+
+<style>
+
 html,body{
-margin:0;padding:0;width:100%;height:100%;overflow:hidden;
-position:fixed;background:#111b21
+margin:0;
+padding:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:#111b21;
 }
-*{box-sizing:border-box}
-body{font-family:Arial;display:flex;flex-direction:column}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,sans-serif;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
 
 .header{
-height:62px;min-height:62px;background:#fff;display:flex;
-align-items:center;padding:0 8px;gap:10px;border-bottom:1px solid #eee
+height:62px;
+min-height:62px;
+background:#fff;
+display:flex;
+align-items:center;
+padding:0 8px;
+gap:10px;
+border-bottom:1px solid #eee;
 }
-.top-ico{width:26px;height:26px;object-fit:contain;cursor:pointer}
-.avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;background:#ddd}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.name{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.top-right{display:flex;gap:16px}
+
+.top-ico{
+width:28px;
+height:28px;
+object-fit:contain;
+cursor:pointer;
+}
+
+.avatar{
+width:42px;
+height:42px;
+border-radius:50%;
+overflow:hidden;
+background:#ddd;
+}
+
+.avatar img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.name{
+flex:1;
+font-weight:600;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.top-right{
+display:flex;
+gap:14px;
+}
+
+/* CHAT */
 
 .chat-area{
-flex:1;background:#e5ddd5 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px
+flex:1;
+background:#e5ddd5
+url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+overflow-y:auto;
+padding:10px;
+display:flex;
+flex-direction:column;
+gap:6px;
 }
 
 .msg{
-max-width:78%;padding:8px 10px;border-radius:8px;
-font-size:14px;background:#fff;box-shadow:0 1px 1px #0002;
-word-break:break-word
+max-width:78%;
+padding:8px 10px;
+border-radius:8px;
+font-size:14px;
+background:#fff;
+box-shadow:0 1px 1px #0002;
+word-break:break-word;
 }
-.me{align-self:flex-end;background:#d9fdd3}
-.time{font-size:10px;color:#667781;float:right;margin:6px 0 0 8px}
+
+.me{
+align-self:flex-end;
+background:#d9fdd3;
+}
+
+.time{
+font-size:10px;
+color:#667781;
+float:right;
+margin:6px 0 0 8px;
+}
+
+/* INPUT */
 
 .input-bar{
-height:62px;min-height:62px;padding:6px 8px;background:#f0f2f5;
-display:flex;align-items:center;gap:6px
+height:62px;
+min-height:62px;
+padding:6px 8px;
+background:#f0f2f5;
+display:flex;
+align-items:center;
+gap:6px;
 }
+
 .input-box{
-flex:1;background:#fff;border-radius:25px;display:flex;
-align-items:center;padding:5px 10px 5px 12px;gap:6px;min-width:0
+flex:1;
+background:#fff;
+border-radius:25px;
+display:flex;
+align-items:center;
+padding:5px 10px 5px 12px;
+gap:6px;
+min-width:0;
 }
+
 .input-box input{
-flex:1;width:0;border:none;outline:none;font-size:15px;padding:8px 0
+flex:1;
+width:0;
+border:0;
+outline:0;
+font-size:15px;
+padding:8px 0;
 }
-.ico{width:24px;height:24px;object-fit:contain;cursor:pointer}
+
+.ico{
+width:24px;
+height:24px;
+object-fit:contain;
+cursor:pointer;
+}
+
 .mic-foto{
-width:46px;height:46px;min-width:46px;border-radius:50%;
-object-fit:cover;background:#00a884;padding:7px
+width:46px;
+height:46px;
+min-width:46px;
+border-radius:50%;
+object-fit:cover;
+background:#00a884;
+padding:8px;
+cursor:pointer;
 }
+
+/* EMOJI */
 
 #emojiPanel{
-position:absolute;bottom:62px;left:0;right:0;background:#fff;height:200px;
-overflow-y:auto;padding:10px;display:none;z-index:30
+position:absolute;
+bottom:62px;
+left:0;
+right:0;
+background:#fff;
+height:200px;
+overflow-y:auto;
+padding:10px;
+display:none;
+z-index:30;
 }
-#emojiPanel span{font-size:26px;padding:6px;display:inline-block;cursor:pointer}
 
-/* DAFTAR TEMAN */
+#emojiPanel span{
+font-size:26px;
+padding:6px;
+display:inline-block;
+cursor:pointer;
+}
+
+/* PEOPLE */
+
 #peoplePanel{
-position:fixed;top:62px;right:8px;width:230px;max-height:300px;
-overflow-y:auto;background:#fff;border-radius:10px;
-box-shadow:0 3px 15px #0005;z-index:50;display:none
+position:fixed;
+top:62px;
+right:8px;
+width:240px;
+max-height:320px;
+overflow-y:auto;
+background:#fff;
+border-radius:10px;
+box-shadow:0 3px 15px #0005;
+z-index:50;
+display:none;
 }
+
 .people-title{
-padding:12px;font-weight:bold;border-bottom:1px solid #eee
+padding:12px;
+font-weight:bold;
+border-bottom:1px solid #eee;
 }
+
 .person{
-display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px;
+cursor:pointer;
 }
-.person:hover{background:#f0f2f5}
+
+.person:hover{
+background:#f0f2f5;
+}
+
 .person img{
-width:38px;height:38px;border-radius:50%;object-fit:cover
+width:38px;
+height:38px;
+border-radius:50%;
+object-fit:cover;
 }
-.person-name{flex:1}
-.call-small{font-size:18px}
+
+.person-name{
+flex:1;
+}
 
 /* CALL */
-#callScreen{
-position:fixed;inset:0;background:#111;z-index:100;display:none;
-flex-direction:column
-}
-#remoteVideo{
-flex:1;display:flex;align-items:center;justify-content:center;
-background:#111;color:#fff
-}
-#remoteVideo video{width:100%;height:100%;object-fit:cover}
-#localVideo{
-position:absolute;right:15px;bottom:90px;width:110px;height:160px;
-background:#333;border:2px solid #fff;border-radius:12px;overflow:hidden;z-index:2
-}
-#localVideo video{width:100%;height:100%;object-fit:cover}
-.call-controls{
-height:80px;background:#000c;display:flex;
-align-items:center;justify-content:center
-}
-.call-btn{
-width:58px;height:58px;border:0;border-radius:50%;
-font-size:23px;cursor:pointer
-}
-.end-call{background:#ff3b30;color:#fff}
 
-/* PANGGILAN MASUK */
+#callScreen{
+position:fixed;
+inset:0;
+background:#111;
+z-index:100;
+display:none;
+flex-direction:column;
+}
+
+#remoteVideo{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#111;
+color:#fff;
+position:relative;
+}
+
+#remoteVideo video{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+#localVideo{
+position:absolute;
+right:15px;
+bottom:90px;
+width:110px;
+height:160px;
+background:#333;
+border:2px solid #fff;
+border-radius:12px;
+overflow:hidden;
+z-index:2;
+}
+
+#localVideo video{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.call-controls{
+height:80px;
+background:#000c;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.call-btn{
+width:58px;
+height:58px;
+border:0;
+border-radius:50%;
+cursor:pointer;
+padding:12px;
+}
+
+.call-btn img{
+width:100%;
+height:100%;
+object-fit:contain;
+}
+
+.end-call{
+background:#ff3b30;
+}
+
+/* INCOMING */
+
 #incomingCall{
-position:fixed;inset:0;background:#000d;z-index:200;
-display:none;align-items:center;justify-content:center
+position:fixed;
+inset:0;
+background:#000d;
+z-index:200;
+display:none;
+align-items:center;
+justify-content:center;
 }
+
 .incoming-card{
-width:85%;max-width:320px;background:#fff;border-radius:18px;
-padding:25px;text-align:center
+width:85%;
+max-width:320px;
+background:#fff;
+border-radius:18px;
+padding:25px;
+text-align:center;
 }
+
 .incoming-avatar{
-width:80px;height:80px;border-radius:50%;overflow:hidden;
-margin:auto;background:#ddd
+width:80px;
+height:80px;
+border-radius:50%;
+overflow:hidden;
+margin:auto;
+background:#ddd;
 }
-.incoming-avatar img{width:100%;height:100%;object-fit:cover}
-.incoming-name{font-size:20px;font-weight:bold;margin-top:12px}
-.incoming-type{color:#667781;margin-top:6px}
+
+.incoming-avatar img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.incoming-name{
+font-size:20px;
+font-weight:bold;
+margin-top:12px;
+}
+
+.incoming-type{
+color:#667781;
+margin-top:6px;
+}
+
 .incoming-buttons{
-display:flex;justify-content:center;gap:35px;margin-top:25px
+display:flex;
+justify-content:center;
+gap:35px;
+margin-top:25px;
 }
+
 .incoming-btn{
-width:60px;height:60px;border:0;border-radius:50%;font-size:23px
+width:60px;
+height:60px;
+border:0;
+border-radius:50%;
+padding:15px;
+cursor:pointer;
 }
-.accept{background:#00a884;color:white}
-.reject{background:#ff3b30;color:white}
+
+.incoming-btn img{
+width:100%;
+height:100%;
+object-fit:contain;
+}
+
+.accept{
+background:#00a884;
+}
+
+.reject{
+background:#ff3b30;
+}
 
 /* JOIN */
+
 #joinModal{
-position:fixed;inset:0;background:#000c;z-index:300;
-display:flex;align-items:center;justify-content:center
+position:fixed;
+inset:0;
+background:#000c;
+z-index:300;
+display:flex;
+align-items:center;
+justify-content:center;
 }
+
 .join-card{
-background:#fff;padding:20px;border-radius:12px;width:85%;max-width:300px;
-text-align:center
+background:#fff;
+padding:20px;
+border-radius:12px;
+width:85%;
+max-width:300px;
+text-align:center;
 }
+
 .join-card input{
-width:100%;padding:12px;margin:5px 0;border:1px solid #ddd;border-radius:8px
+width:100%;
+padding:12px;
+margin:5px 0;
+border:1px solid #ddd;
+border-radius:8px;
 }
+
 .join-card button{
-width:100%;padding:12px;background:#00a884;color:#fff;
-border:0;border-radius:8px;margin-top:10px;font-weight:bold
+width:100%;
+padding:12px;
+background:#00a884;
+color:#fff;
+border:0;
+border-radius:8px;
+margin-top:10px;
+font-weight:bold;
 }
-</style></head><body><div class="header"><img class="top-ico" id="top1"
-src="img/panah.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/panah.png'">
+
+</style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+
+<img
+class="top-ico"
+id="top1"
+src="https://img.icons8.com/ios-filled/50/000000/back.png"
+alt="Kembali"
+>
 
 <div class="avatar">
-<img src="img/avatar.png"
-onerror="this.src='https://picsum.photos/100'">
-</div><div class="name" id="roomTitle">ruang-tes-123</div><div class="top-right"><img class="top-ico" id="top3"
-src="img/video.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/video.png'">
 
-<img class="top-ico" id="top4"
-src="img/telpon.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/telpon.png'">
-
-<img class="top-ico" id="top5"
-src="img/titik3.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/titik3.png'">
+<img
+src="https://picsum.photos/100"
+alt="Avatar"
+>
 
 </div>
-</div><div id="peoplePanel">
-<div class="people-title">Teman di room</div>
+
+<div
+class="name"
+id="roomTitle"
+>
+ruang-tes-123
+</div>
+
+<div class="top-right">
+
+<img
+class="top-ico"
+id="top3"
+src="https://img.icons8.com/ios-filled/50/000000/video-call.png"
+alt="Video"
+>
+
+<img
+class="top-ico"
+id="top4"
+src="https://img.icons8.com/ios-filled/50/000000/phone.png"
+alt="Telepon"
+>
+
+<img
+class="top-ico"
+id="top5"
+src="https://img.icons8.com/ios-filled/50/000000/menu-2.png"
+alt="Teman"
+>
+
+</div>
+
+</div>
+
+
+<!-- PEOPLE -->
+
+<div id="peoplePanel">
+
+<div class="people-title">
+Teman di room
+</div>
+
 <div id="peopleList"></div>
-</div><div class="chat-area" id="msgs"></div><div id="emojiPanel"></div><div id="callScreen"><div id="remoteVideo">
+
+</div>
+
+
+<!-- CHAT -->
+
+<div
+class="chat-area"
+id="msgs"
+></div>
+
+
+<!-- EMOJI -->
+
+<div id="emojiPanel"></div>
+
+
+<!-- CALL -->
+
+<div id="callScreen">
+
+<div id="remoteVideo">
 Menunggu teman...
-</div><div id="localVideo"></div><div class="call-controls">
-<button class="call-btn end-call" id="endCallBtn">📞</button>
-</div></div><div id="incomingCall"><div class="incoming-card"><div class="incoming-avatar">
-<img src="img/avatar.png"
-onerror="this.src='https://picsum.photos/100'">
-</div><div class="incoming-name" id="callerName">Teman</div><div class="incoming-type" id="callerType">
+</div>
+
+<div id="localVideo"></div>
+
+<div class="call-controls">
+
+<button
+class="call-btn end-call"
+id="endCallBtn"
+>
+
+<img
+src="https://img.icons8.com/ios-filled/50/ffffff/phone.png"
+alt="Akhiri"
+>
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- INCOMING -->
+
+<div id="incomingCall">
+
+<div class="incoming-card">
+
+<div class="incoming-avatar">
+
+<img
+src="https://picsum.photos/100"
+alt="Avatar"
+>
+
+</div>
+
+<div
+class="incoming-name"
+id="callerName"
+>
+Teman
+</div>
+
+<div
+class="incoming-type"
+id="callerType"
+>
 Panggilan masuk
-</div><div class="incoming-buttons"><button class="incoming-btn reject" id="rejectCall">📞</button>
+</div>
 
-<button class="incoming-btn accept" id="acceptCall">📞</button>
+<div class="incoming-buttons">
+
+<button
+class="incoming-btn reject"
+id="rejectCall"
+>
+
+<img
+src="https://img.icons8.com/ios-filled/50/ffffff/phone.png"
+alt="Tolak"
+>
+
+</button>
+
+<button
+class="incoming-btn accept"
+id="acceptCall"
+>
+
+<img
+src="https://img.icons8.com/ios-filled/50/ffffff/phone.png"
+alt="Angkat"
+>
+
+</button>
 
 </div>
+
 </div>
-</div><div class="input-bar"><div class="input-box"><img class="ico" id="icon1"
-src="img/imot.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/imot.png'">
 
-<input id="txt" placeholder="Ketik pesan"><img class="ico" id="icon2"
-src="img/file.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/file.png'">
+</div>
 
-<img class="ico" id="icon3"
-src="img/kamer.png"
-onerror="this.src='https://chatvideocall1.netlify.app/img/kamer.png'">
 
-</div><img class="mic-foto" id="btnKirim"
-src="img/mix.png"
-onerror="this.src='https://cdn-icons-png.flaticon.com/512/3602/3602145.png'">
+<!-- INPUT -->
 
-</div><div id="joinModal"><div class="join-card"><h3>Masuk Room</h3><input id="room" value="ruang-tes-123"><input id="myName" placeholder="Nama kamu"><button id="join">Masuk</button>
+<div class="input-bar">
 
-</div></div><script>
+<div class="input-box">
 
-/* =========================
-   KONFIGURASI
-========================= */
+<img
+class="ico"
+id="icon1"
+src="https://img.icons8.com/ios-filled/50/000000/happy.png"
+alt="Emoji"
+>
 
-const SIGNALING_URL =
-(location.protocol === "https:" ? "wss://" : "ws://") +
-location.host;
+<input
+id="txt"
+placeholder="Ketik pesan"
+autocomplete="off"
+>
+
+<img
+class="ico"
+id="icon2"
+src="https://img.icons8.com/ios-filled/50/000000/attach.png"
+alt="File"
+>
+
+<img
+class="ico"
+id="icon3"
+src="https://img.icons8.com/ios-filled/50/000000/camera.png"
+alt="Kamera"
+>
+
+</div>
+
+<img
+class="mic-foto"
+id="btnKirim"
+src="https://img.icons8.com/ios-filled/50/ffffff/microphone.png"
+alt="Mic"
+>
+
+</div>
+
+
+<!-- JOIN -->
+
+<div id="joinModal">
+
+<div class="join-card">
+
+<h3>Masuk Room</h3>
+
+<input
+id="room"
+value="ruang-tes-123"
+placeholder="Nama room"
+>
+
+<input
+id="myName"
+placeholder="Nama kamu"
+>
+
+<button id="join">
+Masuk
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+CONFIG
+===================================================== */
 
 const ICE_CONFIG = {
+
 iceServers:[
-{urls:"stun:stun.l.google.com:19302"}
+
+{
+urls:"stun:stun.l.google.com:19302"
+},
+
+{
+urls:"stun:stun1.l.google.com:19302"
+}
+
 ]
+
 };
 
 
-/* =========================
-   VARIABEL
-========================= */
+/* =====================================================
+VARIABLES
+===================================================== */
 
 let socket = null;
+
 let channelName = "";
+
 let myName = "";
+
 let myId = "";
 
 let people = {};
+
 let selectedPeer = null;
 
 let pc = null;
+
 let localStream = null;
+
 let pendingCall = null;
 
+let pendingCandidates = [];
 
-/* =========================
-   CHAT
-========================= */
+let currentCallVideo = false;
 
-function addMsg(text, cls){
 
-const div=document.createElement("div");
+/* =====================================================
+WEBSOCKET URL
+===================================================== */
 
-div.className="msg "+cls;
+function getWebSocketURL(){
+
+return (
+location.protocol === "https:"
+? "wss://"
+: "ws://"
+) + location.host;
+
+}
+
+
+/* =====================================================
+CHAT
+===================================================== */
+
+function addMsg(
+text,
+cls
+){
+
+const div =
+document.createElement("div");
+
+div.className =
+"msg " + cls;
 
 div.innerHTML =
 text +
 `<span class="time">${
-new Date().toLocaleTimeString().slice(0,5)
+new Date()
+.toLocaleTimeString()
+.slice(0,5)
 }</span>`;
 
-document.getElementById("msgs").appendChild(div);
+document
+.getElementById("msgs")
+.appendChild(div);
 
-const box=document.getElementById("msgs");
+const box =
+document.getElementById("msgs");
 
-box.scrollTop=box.scrollHeight;
+box.scrollTop =
+box.scrollHeight;
+
 }
 
 
-/* =========================
-   MASUK ROOM
-========================= */
+/* =====================================================
+ESCAPE
+===================================================== */
 
-document.getElementById("join").onclick=()=>{
+function escapeHtml(text){
+
+return String(text)
+
+.replaceAll("&","&amp;")
+
+.replaceAll("<","&lt;")
+
+.replaceAll(">","&gt;")
+
+.replaceAll('"',"&quot;")
+
+.replaceAll("'","&#039;");
+
+}
+
+
+/* =====================================================
+JOIN
+===================================================== */
+
+document
+.getElementById("join")
+.onclick = () => {
 
 channelName =
-document.getElementById("room").value.trim();
+document
+.getElementById("room")
+.value
+.trim();
 
 myName =
-document.getElementById("myName").value.trim() || "Saya";
+document
+.getElementById("myName")
+.value
+.trim() ||
+"Saya";
 
 if(!channelName){
-alert("Masukkan nama room");
+
+alert(
+"Masukkan nama room."
+);
+
 return;
+
 }
 
+
 myId =
-Math.random().toString(36).substring(2,10);
+Math.random()
+.toString(36)
+.substring(2,10);
+
 
 socket =
-new WebSocket(SIGNALING_URL);
+new WebSocket(
+getWebSocketURL()
+);
 
-socket.onopen=()=>{
 
-socket.send(JSON.stringify({
+socket.onopen = () => {
+
+socket.send(
+JSON.stringify({
+
 type:"join",
+
 room:channelName,
+
 id:myId,
+
 name:myName
-}));
 
-document.getElementById("joinModal")
-.style.display="none";
+})
+);
 
-document.getElementById("roomTitle")
-.innerText=channelName;
+
+document
+.getElementById("joinModal")
+.style.display =
+"none";
+
+
+document
+.getElementById("roomTitle")
+.innerText =
+channelName;
+
 
 addMsg(
-"Kamu bergabung ke "+channelName,
+"Kamu bergabung ke " +
+escapeHtml(channelName),
 "me"
 );
 
 };
 
-socket.onmessage=async event=>{
+
+socket.onmessage =
+async event => {
 
 try{
 
-const data=JSON.parse(event.data);
+const data =
+JSON.parse(event.data);
 
 await handleSignal(data);
 
-}catch(e){
+}catch(error){
 
-console.error(e);
+console.error(
+error
+);
 
 }
 
 };
 
-socket.onclose=()=>{
+
+socket.onerror = () => {
 
 addMsg(
-"Koneksi server terputus",
+"WebSocket gagal terhubung.",
+"you"
+);
+
+};
+
+
+socket.onclose = () => {
+
+addMsg(
+"Server terputus.",
 "you"
 );
 
@@ -328,89 +919,25 @@ addMsg(
 };
 
 
-/* =========================
-   DAFTAR TEMAN
-========================= */
-
-function renderPeople(){
-
-const list=document.getElementById("peopleList");
-
-list.innerHTML="";
-
-const ids=Object.keys(people);
-
-if(ids.length===0){
-
-list.innerHTML =
-"<div style='padding:12px;color:#777'>Belum ada teman</div>";
-
-return;
-}
-
-ids.forEach(id=>{
-
-const p=people[id];
-
-const div=document.createElement("div");
-
-div.className="person";
-
-div.innerHTML=`
-<img src="img/avatar.png"
-onerror="this.src='https://picsum.photos/100'">
-<div class="person-name">${escapeHtml(p.name)}</div>
-<div class="call-small">📞</div>
-`;
-
-div.onclick=()=>{
-
-selectedPeer=id;
-
-document.getElementById("peoplePanel")
-.style.display="none";
-
-alert(
-"Teman dipilih: "+p.name+
-"\nSekarang tekan 📹 atau 📞"
-);
-
-};
-
-list.appendChild(div);
-
-});
-
-}
-
-
-function escapeHtml(text){
-
-return String(text)
-.replaceAll("&","&amp;")
-.replaceAll("<","&lt;")
-.replaceAll(">","&gt;")
-.replaceAll('"',"&quot;")
-.replaceAll("'","&#039;");
-
-}
-
-
-/* =========================
-   WEBSOCKET MESSAGE
-========================= */
+/* =====================================================
+SIGNAL
+===================================================== */
 
 async function handleSignal(data){
 
-if(data.type==="people"){
+/* PEOPLE */
 
-people={};
+if(data.type === "people"){
 
-data.users.forEach(user=>{
+people = {};
 
-if(user.id!==myId){
+(data.users || [])
+.forEach(user => {
 
-people[user.id]=user;
+if(user.id !== myId){
+
+people[user.id] =
+user;
 
 }
 
@@ -419,126 +946,220 @@ people[user.id]=user;
 renderPeople();
 
 return;
+
 }
 
 
-if(data.type==="chat"){
+/* CHAT */
+
+if(data.type === "chat"){
 
 addMsg(
-escapeHtml(data.name)+": "+
-escapeHtml(data.msg),
+
+"<b>" +
+escapeHtml(
+data.name || "Teman"
+) +
+":</b> " +
+escapeHtml(
+data.msg
+),
+
 "you"
+
 );
 
 return;
+
 }
 
 
-if(data.type==="incoming-call"){
+/* INCOMING */
 
-pendingCall=data;
+if(
+data.type === "incoming-call"
+){
 
-selectedPeer=data.from;
+pendingCall = data;
 
-document.getElementById("callerName")
-.innerText=data.name || "Teman";
+selectedPeer =
+data.from;
 
-document.getElementById("callerType")
-.innerText=
+currentCallVideo =
+!!data.video;
+
+
+document
+.getElementById("callerName")
+.innerText =
+data.name ||
+"Teman";
+
+
+document
+.getElementById("callerType")
+.innerText =
 data.video
-?"Panggilan video masuk"
-:"Panggilan suara masuk";
+? "Panggilan video masuk"
+: "Panggilan suara masuk";
 
-document.getElementById("incomingCall")
-.style.display="flex";
+
+document
+.getElementById("incomingCall")
+.style.display =
+"flex";
+
 
 return;
+
 }
 
 
-if(data.type==="call-accepted"){
+/* OFFER */
+
+if(data.type === "offer"){
+
+if(
+pendingCall &&
+pendingCall.from === data.from
+){
+
+pendingCall.offer =
+data.offer;
+
+}
 
 return;
+
 }
 
 
-if(data.type==="call-rejected"){
+/* ANSWER */
 
-alert("Panggilan ditolak");
+if(data.type === "answer"){
 
-endCall(false);
-
-return;
-}
-
-
-if(data.type==="call-ended"){
-
-endCall(false);
+if(!pc){
 
 return;
+
 }
 
-
-if(data.type==="offer"){
-
-selectedPeer=data.from;
-
-await answerCall(data);
-
-return;
-}
-
-
-if(data.type==="answer"){
-
-if(pc){
+try{
 
 await pc.setRemoteDescription(
-new RTCSessionDescription(data.answer)
+
+new RTCSessionDescription(
+data.answer
+)
+
 );
+
+await flushCandidates();
+
+}catch(error){
+
+console.error(error);
 
 }
 
 return;
+
 }
 
 
-if(data.type==="candidate"){
+/* CANDIDATE */
 
-if(pc && data.candidate){
+if(data.type === "candidate"){
+
+if(
+pc &&
+pc.remoteDescription
+){
 
 try{
 
 await pc.addIceCandidate(
-new RTCIceCandidate(data.candidate)
+
+new RTCIceCandidate(
+data.candidate
+)
+
 );
 
-}catch(e){
+}catch(error){
 
-console.log(e);
+console.error(error);
 
 }
+
+}else{
+
+pendingCandidates.push(
+data.candidate
+);
 
 }
 
 return;
+
+}
+
+
+/* REJECT */
+
+if(
+data.type === "call-rejected"
+){
+
+alert(
+"Panggilan ditolak."
+);
+
+await endCall(false);
+
+return;
+
+}
+
+
+/* END */
+
+if(
+data.type === "call-ended"
+){
+
+await endCall(false);
+
+return;
+
 }
 
 }
 
 
-/* =========================
-   KIRIM SIGNAL
-========================= */
+/* =====================================================
+SEND SIGNAL
+===================================================== */
 
 function sendSignal(data){
 
-if(!socket ||
-socket.readyState!==WebSocket.OPEN)
-return;
+if(
+!socket ||
+socket.readyState !==
+WebSocket.OPEN
+){
 
-socket.send(JSON.stringify({
+alert(
+"Server belum terhubung."
+);
+
+return false;
+
+}
+
+socket.send(
+
+JSON.stringify({
 
 ...data,
 
@@ -546,37 +1167,157 @@ room:channelName,
 
 from:myId
 
-}));
+})
+
+);
+
+return true;
 
 }
 
 
-/* =========================
-   MEDIA
-========================= */
+/* =====================================================
+PEOPLE
+===================================================== */
 
-async function getMedia(video){
+function renderPeople(){
 
-localStream =
-await navigator.mediaDevices.getUserMedia({
+const list =
+document
+.getElementById(
+"peopleList"
+);
 
-audio:true,
-video:video
+list.innerHTML = "";
+
+
+const ids =
+Object.keys(people);
+
+
+if(ids.length === 0){
+
+list.innerHTML =
+"<div style='padding:12px;color:#777'>" +
+"Belum ada teman" +
+"</div>";
+
+return;
+
+}
+
+
+ids.forEach(id => {
+
+const p =
+people[id];
+
+
+const div =
+document.createElement("div");
+
+div.className =
+"person";
+
+
+div.innerHTML = `
+
+<img
+src="https://picsum.photos/100?random=${encodeURIComponent(id)}"
+>
+
+<div class="person-name">
+${escapeHtml(p.name)}
+</div>
+
+<div>
+📞
+</div>
+
+`;
+
+
+div.onclick = () => {
+
+selectedPeer =
+id;
+
+document
+.getElementById(
+"peoplePanel"
+)
+.style.display =
+"none";
+
+alert(
+"Teman dipilih: " +
+p.name
+);
+
+};
+
+
+list.appendChild(div);
 
 });
 
+}
+
+
+/* =====================================================
+MEDIA
+===================================================== */
+
+async function getMedia(video){
+
+if(localStream){
+
+return;
+
+}
+
+
+localStream =
+await navigator
+.mediaDevices
+.getUserMedia({
+
+audio:true,
+
+video:
+video
+? {
+facingMode:"user"
+}
+: false
+
+});
+
+
 if(video){
 
-const box=document.getElementById("localVideo");
+const box =
+document
+.getElementById(
+"localVideo"
+);
 
-box.innerHTML="";
+box.innerHTML = "";
 
-const v=document.createElement("video");
 
-v.autoplay=true;
-v.muted=true;
-v.playsInline=true;
-v.srcObject=localStream;
+const v =
+document.createElement(
+"video"
+);
+
+v.autoplay = true;
+
+v.muted = true;
+
+v.playsInline = true;
+
+v.srcObject =
+localStream;
 
 box.appendChild(v);
 
@@ -585,25 +1326,43 @@ box.appendChild(v);
 }
 
 
-/* =========================
-   PEER CONNECTION
-========================= */
+/* =====================================================
+PEER
+===================================================== */
 
 function createPeer(){
 
-pc=new RTCPeerConnection(ICE_CONFIG);
+if(pc){
+
+return pc;
+
+}
+
+
+pc =
+new RTCPeerConnection(
+ICE_CONFIG
+);
+
 
 if(localStream){
 
-localStream.getTracks().forEach(track=>{
+localStream
+.getTracks()
+.forEach(track => {
 
-pc.addTrack(track,localStream);
+pc.addTrack(
+track,
+localStream
+);
 
 });
 
 }
 
-pc.onicecandidate=event=>{
+
+pc.onicecandidate =
+event => {
 
 if(event.candidate){
 
@@ -613,7 +1372,8 @@ type:"candidate",
 
 to:selectedPeer,
 
-candidate:event.candidate
+candidate:
+event.candidate
 
 });
 
@@ -622,32 +1382,86 @@ candidate:event.candidate
 };
 
 
-pc.ontrack=event=>{
+pc.ontrack =
+event => {
 
-const box=document.getElementById("remoteVideo");
+const box =
+document
+.getElementById(
+"remoteVideo"
+);
 
-box.innerHTML="";
+let video =
+box.querySelector(
+"video"
+);
 
-const v=document.createElement("video");
 
-v.autoplay=true;
-v.playsInline=true;
-v.srcObject=event.streams[0];
+if(!video){
 
-box.appendChild(v);
+box.innerHTML = "";
+
+video =
+document.createElement(
+"video"
+);
+
+video.autoplay = true;
+
+video.playsInline = true;
+
+box.appendChild(video);
+
+}
+
+
+if(event.streams[0]){
+
+video.srcObject =
+event.streams[0];
+
+}
 
 };
 
 
-pc.onconnectionstatechange=()=>{
+pc.onconnectionstatechange =
+() => {
+
+if(!pc){
+
+return;
+
+}
+
+console.log(
+"Connection:",
+pc.connectionState
+);
+
 
 if(
-pc &&
-(
-pc.connectionState==="failed" ||
-pc.connectionState==="disconnected"
-)
+pc.connectionState ===
+"connected"
 ){
+
+addMsg(
+"Panggilan tersambung.",
+"me"
+);
+
+}
+
+
+if(
+pc.connectionState ===
+"failed"
+){
+
+addMsg(
+"Panggilan gagal tersambung.",
+"you"
+);
 
 endCall(false);
 
@@ -655,34 +1469,112 @@ endCall(false);
 
 };
 
+
+return pc;
+
 }
 
 
-/* =========================
-   MULAI PANGGILAN
-========================= */
+/* =====================================================
+ICE
+===================================================== */
+
+async function flushCandidates(){
+
+if(
+!pc ||
+!pc.remoteDescription
+){
+
+return;
+
+}
+
+
+while(
+pendingCandidates.length
+){
+
+const candidate =
+pendingCandidates.shift();
+
+
+try{
+
+await pc.addIceCandidate(
+
+new RTCIceCandidate(
+candidate
+)
+
+);
+
+}catch(error){
+
+console.error(
+error
+);
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+START CALL
+===================================================== */
 
 async function startCall(video){
 
 if(!selectedPeer){
 
-document.getElementById("peoplePanel")
-.style.display="block";
+document
+.getElementById(
+"peoplePanel"
+)
+.style.display =
+"block";
 
-alert("Pilih teman terlebih dahulu");
+renderPeople();
+
+alert(
+"Pilih teman terlebih dahulu."
+);
 
 return;
+
 }
+
+
+if(pc){
+
+alert(
+"Panggilan sedang berlangsung."
+);
+
+return;
+
+}
+
+
+currentCallVideo =
+video;
+
 
 try{
 
-await getMedia(video);
+await getMedia(
+video
+);
 
 createPeer();
 
-const offer=await pc.createOffer();
 
-await pc.setLocalDescription(offer);
+/*
+Kirim notifikasi panggilan.
+*/
 
 sendSignal({
 
@@ -696,6 +1588,20 @@ video:video
 
 });
 
+
+/*
+Buat offer.
+*/
+
+const offer =
+await pc.createOffer();
+
+
+await pc.setLocalDescription(
+offer
+);
+
+
 sendSignal({
 
 type:"offer",
@@ -708,314 +1614,567 @@ video:video
 
 });
 
+
 showCall(video);
 
-}catch(e){
 
-console.error(e);
+}catch(error){
 
-alert("Kamera/mikrofon tidak dapat digunakan");
+console.error(
+error
+);
+
+await endCall(false);
+
+alert(
+"Kamera atau mikrofon tidak dapat digunakan."
+);
 
 }
 
 }
 
 
-/* =========================
-   JAWAB PANGGILAN
-========================= */
+/* =====================================================
+ANSWER
+===================================================== */
 
-async function answerCall(data){
+async function answerCall(){
+
+if(!pendingCall){
+
+return;
+
+}
+
+
+const call =
+pendingCall;
+
+
+selectedPeer =
+call.from;
+
 
 try{
 
-if(!pc){
-
-await getMedia(data.video);
+await getMedia(
+!!call.video
+);
 
 createPeer();
 
-}
 
-await pc.setRemoteDescription(
-new RTCSessionDescription(data.offer)
+let count = 0;
+
+while(
+!call.offer &&
+count < 100
+){
+
+await new Promise(
+resolve =>
+setTimeout(
+resolve,
+100
+)
 );
 
-const answer=await pc.createAnswer();
+count++;
 
-await pc.setLocalDescription(answer);
+}
+
+
+if(!call.offer){
+
+throw new Error(
+"Offer tidak diterima."
+);
+
+}
+
+
+await pc.setRemoteDescription(
+
+new RTCSessionDescription(
+call.offer
+)
+
+);
+
+
+await flushCandidates();
+
+
+const answer =
+await pc.createAnswer();
+
+
+await pc.setLocalDescription(
+answer
+);
+
 
 sendSignal({
 
 type:"answer",
 
-to:data.from,
+to:call.from,
 
 answer:answer
 
 });
 
-showCall(data.video);
 
-}catch(e){
+showCall(
+!!call.video
+);
 
-console.error(e);
 
-alert("Gagal menerima panggilan");
+pendingCall = null;
+
+
+}catch(error){
+
+console.error(
+error
+);
+
+alert(
+"Gagal menerima panggilan."
+);
+
+await endCall(false);
 
 }
 
 }
 
 
-/* =========================
-   TAMPILKAN CALL
-========================= */
+/* =====================================================
+SHOW CALL
+===================================================== */
 
 function showCall(video){
 
-document.getElementById("callScreen")
-.style.display="flex";
+document
+.getElementById(
+"callScreen"
+)
+.style.display =
+"flex";
+
 
 if(!video){
 
-document.getElementById("localVideo")
-.innerHTML="";
+document
+.getElementById(
+"localVideo"
+)
+.innerHTML =
+"";
 
 }
 
 }
 
 
-/* =========================
-   ANGKAT
-========================= */
+/* =====================================================
+ACCEPT
+===================================================== */
 
-document.getElementById("acceptCall").onclick=async()=>{
+document
+.getElementById(
+"acceptCall"
+)
+.onclick =
+async () => {
 
-document.getElementById("incomingCall")
-.style.display="none";
+document
+.getElementById(
+"incomingCall"
+)
+.style.display =
+"none";
 
-if(!pendingCall)return;
-
-const call=pendingCall;
-
-pendingCall=null;
-
-selectedPeer=call.from;
-
-await answerCall(call);
+await answerCall();
 
 };
 
 
-/* =========================
-   TOLAK
-========================= */
+/* =====================================================
+REJECT
+===================================================== */
 
-document.getElementById("rejectCall").onclick=()=>{
+document
+.getElementById(
+"rejectCall"
+)
+.onclick =
+() => {
 
-document.getElementById("incomingCall")
-.style.display="none";
-
-if(pendingCall){
+if(
+pendingCall
+){
 
 sendSignal({
 
-type:"call-rejected",
+type:
+"call-rejected",
 
-to:pendingCall.from
+to:
+pendingCall.from
 
 });
 
 }
 
-pendingCall=null;
+
+pendingCall = null;
+
+
+document
+.getElementById(
+"incomingCall"
+)
+.style.display =
+"none";
 
 };
 
 
-/* =========================
-   AKHIRI PANGGILAN
-========================= */
+/* =====================================================
+END CALL
+===================================================== */
 
-async function endCall(sendEnd=true){
+async function endCall(
+sendEnd = true
+){
 
-if(sendEnd && selectedPeer){
+const peer =
+selectedPeer;
+
+
+if(
+sendEnd &&
+peer
+){
 
 sendSignal({
 
-type:"call-ended",
+type:
+"call-ended",
 
-to:selectedPeer
+to:
+peer
 
 });
 
 }
+
 
 if(localStream){
 
-localStream.getTracks().forEach(
-track=>track.stop()
+localStream
+.getTracks()
+.forEach(
+track =>
+track.stop()
 );
 
-localStream=null;
+localStream = null;
 
 }
+
 
 if(pc){
 
 pc.close();
 
-pc=null;
-
-}
-
-document.getElementById("localVideo")
-.innerHTML="";
-
-document.getElementById("remoteVideo")
-.innerHTML="Menunggu teman...";
-
-document.getElementById("callScreen")
-.style.display="none";
+pc = null;
 
 }
 
 
-/* =========================
-   TOMBOL HEADER
-========================= */
+pendingCall = null;
 
-document.getElementById("top1").onclick=()=>{
+pendingCandidates = [];
+
+
+document
+.getElementById(
+"localVideo"
+)
+.innerHTML =
+"";
+
+
+document
+.getElementById(
+"remoteVideo"
+)
+.innerHTML =
+"Menunggu teman...";
+
+
+document
+.getElementById(
+"callScreen"
+)
+.style.display =
+"none";
+
+}
+
+
+/* =====================================================
+HEADER
+===================================================== */
+
+document
+.getElementById("top1")
+.onclick = () => {
+
 location.reload();
+
 };
 
-document.getElementById("top3").onclick=()=>{
+
+document
+.getElementById("top3")
+.onclick = () => {
+
 startCall(true);
+
 };
 
-document.getElementById("top4").onclick=()=>{
+
+document
+.getElementById("top4")
+.onclick = () => {
+
 startCall(false);
+
 };
 
-document.getElementById("top5").onclick=()=>{
 
-const panel=document.getElementById("peoplePanel");
+document
+.getElementById("top5")
+.onclick = () => {
+
+const panel =
+document
+.getElementById(
+"peoplePanel"
+);
 
 panel.style.display =
-panel.style.display==="block"
-?"none"
-:"block";
+panel.style.display ===
+"block"
+? "none"
+: "block";
 
 renderPeople();
 
 };
 
 
-/* =========================
-   CHAT
-========================= */
+/* END CALL */
 
-async function send(){
+document
+.getElementById(
+"endCallBtn"
+)
+.onclick = () => {
 
-const inp=document.getElementById("txt");
+endCall(true);
 
-const text=inp.value.trim();
+};
 
-if(!text)return;
 
-addMsg(
-"Kamu: "+escapeHtml(text),
-"me"
+/* =====================================================
+CHAT
+===================================================== */
+
+const txt =
+document.getElementById(
+"txt"
 );
 
-inp.value="";
+const btn =
+document.getElementById(
+"btnKirim"
+);
 
-updateTombol();
-
-if(socket){
-
-socket.send(JSON.stringify({
-
-type:"chat",
-
-room:channelName,
-
-msg:text
-
-}));
-
-}
-
-}
-
-const txt=document.getElementById("txt");
-const btn=document.getElementById("btnKirim");
 
 function updateTombol(){
 
-if(txt.value.trim()){
+if(
+txt.value.trim()
+){
 
-btn.dataset.mode="send";
+btn.src =
+"https://img.icons8.com/ios-filled/50/ffffff/sent.png";
 
-btn.src="img/kirim.png";
+btn.dataset.mode =
+"send";
 
 }else{
 
-btn.dataset.mode="mic";
+btn.src =
+"https://img.icons8.com/ios-filled/50/ffffff/microphone.png";
 
-btn.src="img/mix.png";
+btn.dataset.mode =
+"mic";
 
 }
 
 }
 
-txt.addEventListener("input",updateTombol);
 
-txt.addEventListener("keypress",e=>{
+function send(){
 
-if(e.key==="Enter")send();
+const text =
+txt.value.trim();
+
+
+if(!text){
+
+return;
+
+}
+
+
+addMsg(
+"Kamu: " +
+escapeHtml(text),
+"me"
+);
+
+
+if(
+socket &&
+socket.readyState ===
+WebSocket.OPEN
+){
+
+sendSignal({
+
+type:"chat",
+
+name:myName,
+
+msg:text
 
 });
 
-btn.onclick=()=>{
+}
 
-if(btn.dataset.mode==="send")
+
+txt.value = "";
+
+updateTombol();
+
+}
+
+
+txt.addEventListener(
+"input",
+updateTombol
+);
+
+
+txt.addEventListener(
+"keydown",
+e => {
+
+if(
+e.key === "Enter"
+){
+
+e.preventDefault();
+
 send();
 
+}
+
+});
+
+
+btn.onclick = () => {
+
+if(
+btn.dataset.mode ===
+"send"
+){
+
+send();
+
+}else{
+
+alert(
+"Fitur rekam suara belum diaktifkan."
+);
+
+}
+
 };
 
 
-/* =========================
-   EMOJI
-========================= */
+/* =====================================================
+EMOJI
+===================================================== */
 
-const emojiPanel=document.getElementById("emojiPanel");
+const emojiPanel =
+document.getElementById(
+"emojiPanel"
+);
 
-const emojis=[
-"😀","😂","😍","😭","😡","👍","🙏","❤️",
-"🔥","🎉","😊","😅","🤣","😘","😎","🥳",
-"🤔","🙄","😴","😁","🥰","😱","👏","💪"
+
+const emojis = [
+
+"😀","😂","😍","😭",
+"😡","👍","🙏","❤️",
+"🔥","🎉","😊","😅",
+"🤣","😘","😎","🥳",
+"🤔","🙄","😴","😁",
+"🥰","😱","👏","💪"
+
 ];
 
-emojiPanel.innerHTML=
-emojis.map(e=>`<span>${e}</span>`).join("");
 
-document.getElementById("icon1").onclick=()=>{
+emojiPanel.innerHTML =
+emojis
+.map(
+e =>
+`<span>${e}</span>`
+)
+.join("");
 
-emojiPanel.style.display=
-emojiPanel.style.display==="block"
-?"none"
-:"block";
+
+document
+.getElementById("icon1")
+.onclick = () => {
+
+emojiPanel.style.display =
+emojiPanel.style.display ===
+"block"
+? "none"
+: "block";
 
 };
 
-emojiPanel.onclick=e=>{
 
-if(e.target.tagName==="SPAN"){
+emojiPanel.onclick =
+e => {
 
-txt.value+=e.target.innerText;
+if(
+e.target.tagName ===
+"SPAN"
+){
+
+txt.value +=
+e.target.innerText;
 
 txt.focus();
 
@@ -1026,98 +2185,191 @@ updateTombol();
 };
 
 
-/* =========================
-   FILE
-========================= */
+/* =====================================================
+FILE
+===================================================== */
 
-document.getElementById("icon2").onclick=()=>{
+document
+.getElementById("icon2")
+.onclick = () => {
 
-const input=document.createElement("input");
+const input =
+document.createElement(
+"input"
+);
 
-input.type="file";
+input.type =
+"file";
 
-input.onchange=e=>{
 
-const file=e.target.files[0];
+input.onchange =
+e => {
+
+const file =
+e.target.files[0];
+
 
 if(file){
 
 addMsg(
-"📎 File: <b>"+
-escapeHtml(file.name)+
+
+"📎 File: <b>" +
+escapeHtml(
+file.name
+) +
 "</b>",
+
 "me"
+
 );
 
 }
 
 };
+
 
 input.click();
 
 };
 
 
-/* =========================
-   KAMERA
-========================= */
+/* =====================================================
+CAMERA
+===================================================== */
 
-document.getElementById("icon3").onclick=async()=>{
+document
+.getElementById("icon3")
+.onclick =
+async () => {
+
+let stream = null;
+
 
 try{
 
-const stream=
-await navigator.mediaDevices.getUserMedia({
+stream =
+await navigator
+.mediaDevices
+.getUserMedia({
+
 video:true
+
 });
 
-const v=document.createElement("video");
 
-v.srcObject=stream;
-
-v.autoplay=true;
-v.playsInline=true;
-
-v.style.cssText=
-"position:fixed;inset:0;width:100%;height:100%;"+
-"z-index:60;object-fit:cover;background:#000";
-
-document.body.appendChild(v);
-
-v.onclick=()=>{
-
-const canvas=document.createElement("canvas");
-
-canvas.width=v.videoWidth;
-canvas.height=v.videoHeight;
-
-canvas.getContext("2d")
-.drawImage(v,0,0);
-
-const url=
-canvas.toDataURL("image/jpeg",0.8);
-
-addMsg(
-`<img src="${url}" style="max-width:220px;border-radius:8px">`,
-"me"
+const v =
+document.createElement(
+"video"
 );
 
-stream.getTracks().forEach(t=>t.stop());
+v.srcObject =
+stream;
+
+v.autoplay = true;
+
+v.playsInline = true;
+
+v.style.cssText =
+"position:fixed;" +
+"inset:0;" +
+"width:100%;" +
+"height:100%;" +
+"z-index:60;" +
+"object-fit:cover;" +
+"background:#000;";
+
+
+document
+.body
+.appendChild(v);
+
+
+v.onclick = () => {
+
+const canvas =
+document.createElement(
+"canvas"
+);
+
+
+canvas.width =
+v.videoWidth;
+
+canvas.height =
+v.videoHeight;
+
+
+canvas
+.getContext("2d")
+.drawImage(
+v,
+0,
+0
+);
+
+
+const url =
+canvas.toDataURL(
+"image/jpeg",
+0.8
+);
+
+
+addMsg(
+
+`<img src="${url}"
+style="max-width:220px;border-radius:8px">`,
+
+"me"
+
+);
+
+
+stream
+.getTracks()
+.forEach(
+t => t.stop()
+);
+
 
 v.remove();
 
 };
 
-}catch(e){
 
-alert("Kamera tidak diizinkan");
+}catch(error){
+
+console.error(
+error
+);
+
+if(stream){
+
+stream
+.getTracks()
+.forEach(
+t => t.stop()
+);
+
+}
+
+
+alert(
+"Kamera tidak diizinkan."
+);
 
 }
 
 };
 
 
+/* =====================================================
+INIT
+===================================================== */
+
 updateTombol();
 
-</script></body>
-</html>
+</script>
+
+</body>
+   </html>
