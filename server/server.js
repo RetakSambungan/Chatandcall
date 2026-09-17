@@ -6,10 +6,8 @@ const WebSocket = require("ws");
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(
-    __dirname,
-    req.url === "/" ? "index.html" : req.url
-  );
+  let file = req.url === "/" ? "/index.html" : req.url;
+  const filePath = path.join(__dirname, file);
 
   if (!fs.existsSync(filePath)) {
     res.writeHead(404);
@@ -20,9 +18,9 @@ const server = http.createServer((req, res) => {
   const ext = path.extname(filePath);
 
   const types = {
-    ".html": "text/html",
+    ".html": "text/html; charset=utf-8",
     ".js": "application/javascript",
-    ".css": "text/css",
+    ".css": "text/css; charset=utf-8",
     ".json": "application/json",
     ".png": "image/png",
     ".jpg": "image/jpeg",
@@ -31,7 +29,7 @@ const server = http.createServer((req, res) => {
   };
 
   res.writeHead(200, {
-    "Content-Type": types[ext] || "text/plain"
+    "Content-Type": types[ext] || "application/octet-stream"
   });
 
   fs.createReadStream(filePath).pipe(res);
@@ -39,34 +37,141 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocket.Server({ server });
 
-const clients = new Set();
+const clients = new Map();
+
+function send(ws, data) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+function sendToRoom(room, sender, data) {
+  for (const client of clients.keys()) {
+    if (
+      client !== sender &&
+      client.room === room &&
+      client.readyState === WebSocket.OPEN
+    ) {
+      send(client, data);
+    }
+  }
+}
 
 wss.on("connection", (ws) => {
-  clients.add(ws);
 
-  ws.send(JSON.stringify({
-    type: "connected",
-    message: "Terhubung ke server"
-  }));
+  clients.set(ws, {
+    room: null,
+    name: "Pengguna"
+  });
 
-  ws.on("message", (data) => {
-    let message;
+  send(ws, {
+    type: "connected"
+  });
+
+  ws.on("message", (raw) => {
+
+    let data;
 
     try {
-      message = JSON.parse(data.toString());
+      data = JSON.parse(raw.toString());
     } catch {
       return;
     }
 
-    // Kirim pesan ke semua pengguna lain
-    for (const client of clients) {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
+    const info = clients.get(ws);
+
+    if (!info) return;
+
+    /* =========================
+       JOIN ROOM
+    ========================= */
+
+    if (data.type === "join") {
+
+      const room =
+        String(data.room || "").trim();
+
+      const name =
+        String(data.name || "Pengguna").trim();
+
+      if (!room) {
+        send(ws, {
+          type: "error",
+          message: "ID teman/room belum diisi."
+        });
+        return;
       }
+
+      info.room = room;
+      info.name = name || "Pengguna";
+
+      let users = 0;
+
+      for (const client of clients.keys()) {
+        const c = clients.get(client);
+
+        if (
+          client !== ws &&
+          c.room === room
+        ) {
+          users++;
+        }
+      }
+
+      send(ws, {
+        type: "joined",
+        room: room,
+        users: users + 1
+      });
+
+      sendToRoom(room, ws, {
+        type: "user-joined",
+        name: info.name
+      });
+
+      return;
     }
+
+    /* =========================
+       DATA DALAM ROOM
+    ========================= */
+
+    if (!info.room) {
+      send(ws, {
+        type: "error",
+        message: "Masuk ke room terlebih dahulu."
+      });
+      return;
+    }
+
+    /*
+      Semua signaling WebRTC dan chat
+      hanya dikirim ke pengguna lain
+      di room yang sama.
+    */
+
+    sendToRoom(
+      info.room,
+      ws,
+      data
+    );
   });
 
   ws.on("close", () => {
+
+    const info = clients.get(ws);
+
+    if (info && info.room) {
+
+      sendToRoom(
+        info.room,
+        ws,
+        {
+          type: "user-left"
+        }
+      );
+    }
+
     clients.delete(ws);
   });
 
@@ -76,5 +181,7 @@ wss.on("connection", (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server berjalan di port ${PORT}`);
+  console.log(
+    "Chatandcall server berjalan di port " + PORT
+  );
 });
