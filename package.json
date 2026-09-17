@@ -1,16 +1,12 @@
 {
-  "name": "videochat",
+  "name": "chatandcall",
   "version": "1.0.0",
-  "description": "Website video call dan chat 1 lawan 1",
-  "main": "server/server.js",
+  "description": "Chat and video call using WebRTC and WebSocket",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
     "ws": "^8.18.0"
   }
 }
