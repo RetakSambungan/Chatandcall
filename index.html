@@ -202,10 +202,13 @@ header{
   color:white;
 }
 
-#fileInput{display:none}
+#fileInput{
+  display:none;
+}
 
 .chatImage{
   max-width:220px;
+  max-height:300px;
   border-radius:10px;
   display:block;
 }
@@ -257,7 +260,9 @@ header{
   background:#333;
 }
 
-.endCall{background:#e53935}
+.endCall{
+  background:#e53935;
+}
 
 #incomingCall{
   display:none;
@@ -307,14 +312,36 @@ header{
   font-size:28px;
 }
 
-.accept{background:#22c55e}
-.reject{background:#ef4444}
+.accept{
+  background:#22c55e;
+}
+
+.reject{
+  background:#ef4444;
+}
+
+#callStatus{
+  position:absolute;
+  left:0;
+  right:0;
+  top:15px;
+  text-align:center;
+  color:white;
+  font-size:14px;
+  z-index:2;
+  text-shadow:0 1px 4px #000;
+}
 </style>
 </head>
 
 <body>
 
+<!-- =========================
+     ROOM SCREEN
+========================= -->
+
 <div id="roomScreen">
+
   <div class="roomBox">
 
     <div class="logo">💬</div>
@@ -326,33 +353,42 @@ header{
       dengan teman.
     </p>
 
-    <input id="nameInput"
+    <input
+      id="nameInput"
       type="text"
       placeholder="Nama kamu"
       autocomplete="off">
 
-    <input id="roomInput"
+    <input
+      id="roomInput"
       type="text"
       placeholder="ID Room"
       autocomplete="off">
 
-    <button class="roomAction"
+    <button
+      class="roomAction"
       onclick="createRoom()">
       🎥 Buat Room
     </button>
 
-    <button class="joinButton"
+    <button
+      class="joinButton"
       onclick="joinRoom()">
       Masuk Room
     </button>
 
     <div id="roomLinkBox">
+
       <div id="roomLink"></div>
+
       <br>
-      <button class="joinButton"
+
+      <button
+        class="joinButton"
         onclick="shareRoom()">
         🔗 Bagikan Link Room
       </button>
+
     </div>
 
     <div class="roomInfo">
@@ -361,88 +397,136 @@ header{
     </div>
 
   </div>
+
 </div>
 
+
+<!-- =========================
+     HEADER
+========================= -->
+
 <header>
+
   <span>Chat & Call</span>
 
-  <button class="callButton"
+  <button
+    class="callButton"
     onclick="startCall(true)">
     📹
   </button>
 
-  <button class="callButton"
+  <button
+    class="callButton"
     onclick="startCall(false)">
     📞
   </button>
 
-  <span id="status">Menghubungkan...</span>
+  <span id="status">
+    Menghubungkan...
+  </span>
+
 </header>
 
+
+<!-- =========================
+     CHAT
+========================= -->
+
 <div id="chat">
+
   <div class="system">
     Belum terhubung.
   </div>
+
 </div>
+
 
 <div id="inputArea">
 
-  <button class="iconButton"
+  <button
+    class="iconButton"
     onclick="document.getElementById('fileInput').click()">
     🖼️
   </button>
 
-  <input id="fileInput"
+  <input
+    id="fileInput"
     type="file"
     accept="image/*"
     onchange="sendImage(event)">
 
-  <input id="messageInput"
+  <input
+    id="messageInput"
     type="text"
     placeholder="Tulis pesan..."
     autocomplete="off">
 
-  <button class="iconButton sendButton"
+  <button
+    class="iconButton sendButton"
     onclick="sendMessage()">
     ➤
   </button>
 
 </div>
 
+
+<!-- =========================
+     VIDEO
+========================= -->
+
 <div id="videoScreen">
 
-  <video id="remoteVideo"
-    autoplay
-    playsinline></video>
+  <div id="callStatus">
+    Menghubungkan...
+  </div>
 
-  <video id="localVideo"
+  <video
+    id="remoteVideo"
+    autoplay
+    playsinline>
+  </video>
+
+  <video
+    id="localVideo"
     autoplay
     muted
-    playsinline></video>
+    playsinline>
+  </video>
 
   <div class="callControls">
 
-    <button class="callControl"
+    <button
+      class="callControl"
       onclick="toggleMute()">
       🎤
     </button>
 
-    <button class="callControl"
+    <button
+      class="callControl"
       onclick="toggleCamera()">
       📷
     </button>
 
-    <button class="callControl endCall"
+    <button
+      class="callControl endCall"
       onclick="endCall()">
       ☎
     </button>
 
   </div>
+
 </div>
+
+
+<!-- =========================
+     INCOMING CALL
+========================= -->
 
 <div id="incomingCall">
 
-  <div class="callerIcon">👤</div>
+  <div class="callerIcon">
+    👤
+  </div>
 
   <div id="callerName">
     Panggilan masuk
@@ -454,43 +538,91 @@ header{
 
   <div class="incomingButtons">
 
-    <button class="incomingButton reject"
+    <button
+      class="incomingButton reject"
       onclick="rejectCall()">
       ✕
     </button>
 
-    <button class="incomingButton accept"
+    <button
+      class="incomingButton accept"
       onclick="acceptCall()">
       ✓
     </button>
 
   </div>
+
 </div>
+
 
 <script>
 
-let socket=null;
-let connected=false;
-let joined=false;
+/* =========================
+   VARIABLES
+========================= */
 
-let myName="";
-let myRoom="";
+let socket = null;
+let connected = false;
+let joined = false;
 
-let peerConnection=null;
-let localStream=null;
+let myName = "";
+let myRoom = "";
 
-let pendingOffer=null;
-let pendingCallType="video";
-let pendingCandidates=[];
+let peerConnection = null;
+let localStream = null;
 
-let isCaller=false;
+let pendingOffer = null;
+let pendingCallType = "video";
+let pendingCandidates = [];
 
-const rtcConfig={
-  iceServers:[
-    {urls:"stun:stun.l.google.com:19302"},
-    {urls:"stun:stun1.l.google.com:19302"}
+let isCaller = false;
+
+
+/* =========================
+   WEBRTC
+========================= */
+
+const rtcConfig = {
+
+  iceServers: [
+
+    {
+      urls: "stun:stun.l.google.com:19302"
+    },
+
+    {
+      urls: "stun:stun1.l.google.com:19302"
+    },
+
+    {
+      urls: "stun:stun.cloudflare.com:3478"
+    }
+
   ]
+
 };
+
+
+/* =========================
+   SEND SOCKET
+========================= */
+
+function sendSocket(data){
+
+  if(
+    socket &&
+    socket.readyState === WebSocket.OPEN
+  ){
+
+    socket.send(
+      JSON.stringify(data)
+    );
+
+    return true;
+  }
+
+  return false;
+}
 
 
 /* =========================
@@ -499,17 +631,20 @@ const rtcConfig={
 
 function createRoom(){
 
-  const room=
+  const room =
     Math.random()
-    .toString(36)
-    .substring(2,8)
-    .toUpperCase();
+      .toString(36)
+      .substring(2,8)
+      .toUpperCase();
 
-  document.getElementById("roomInput").value=room;
+  document.getElementById("roomInput")
+    .value = room;
 
-  document.getElementById("roomLinkBox").style.display="block";
+  document.getElementById("roomLinkBox")
+    .style.display = "block";
 
   updateRoomLink(room);
+
 }
 
 
@@ -519,77 +654,114 @@ function createRoom(){
 
 function updateRoomLink(room){
 
-  const link=
-    location.origin+
-    location.pathname+
-    "?room="+
+  const link =
+    location.origin +
+    location.pathname +
+    "?room=" +
     encodeURIComponent(room);
 
-  document.getElementById("roomLink").textContent=link;
+  document.getElementById("roomLink")
+    .textContent = link;
+
 }
 
 
 function shareRoom(){
 
-  const room=
-    document.getElementById("roomInput").value.trim();
+  const room =
+    document.getElementById("roomInput")
+      .value.trim();
 
   if(!room){
-    alert("Buat Room terlebih dahulu.");
+
+    alert(
+      "Buat Room terlebih dahulu."
+    );
+
     return;
   }
 
   updateRoomLink(room);
 
-  const link=
-    location.origin+
-    location.pathname+
-    "?room="+
+  const link =
+    location.origin +
+    location.pathname +
+    "?room=" +
     encodeURIComponent(room);
 
   if(navigator.share){
 
     navigator.share({
+
       title:"Chat & Call",
+
       text:"Gabung ke room saya:",
+
       url:link
+
     }).catch(()=>{});
 
   }else{
 
-    navigator.clipboard.writeText(link)
-      .then(()=>{
-        alert("Link Room berhasil disalin.");
-      })
-      .catch(()=>{
-        prompt("Salin link ini:",link);
-      });
+    copyText(link);
 
   }
+
 }
 
 
 /* =========================
-   AUTO ROOM FROM LINK
+   COPY LINK
+========================= */
+
+async function copyText(text){
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    alert(
+      "Link Room berhasil disalin."
+    );
+
+  }catch{
+
+    prompt(
+      "Salin link ini:",
+      text
+    );
+
+  }
+
+}
+
+
+/* =========================
+   LOAD ROOM LINK
 ========================= */
 
 function loadRoomFromLink(){
 
-  const params=
-    new URLSearchParams(location.search);
+  const params =
+    new URLSearchParams(
+      location.search
+    );
 
-  const room=
+  const room =
     params.get("room");
 
   if(room){
 
-    document.getElementById("roomInput").value=room;
+    document.getElementById("roomInput")
+      .value = room;
 
-    document.getElementById("roomLinkBox").style.display="block";
+    document.getElementById("roomLinkBox")
+      .style.display = "block";
 
     updateRoomLink(room);
 
   }
+
 }
 
 
@@ -599,46 +771,56 @@ function loadRoomFromLink(){
 
 function connectSocket(){
 
-  const protocol=
-    location.protocol==="https:"
+  const protocol =
+    location.protocol === "https:"
       ? "wss://"
       : "ws://";
 
-  socket=
+  socket =
     new WebSocket(
-      protocol+location.host
+      protocol + location.host
     );
 
-  socket.onopen=()=>{
 
-    connected=true;
+  socket.onopen = function(){
+
+    connected = true;
 
     document.getElementById("status")
-      .textContent="Online";
+      .textContent = "Online";
 
-    addSystem("Server terhubung.");
+    addSystem(
+      "Server terhubung."
+    );
 
   };
 
-  socket.onclose=()=>{
 
-    connected=false;
+  socket.onclose = function(){
+
+    connected = false;
 
     document.getElementById("status")
-      .textContent="Offline";
+      .textContent = "Offline";
 
-    addSystem("Koneksi server terputus.");
+    addSystem(
+      "Koneksi server terputus."
+    );
 
   };
 
-  socket.onerror=()=>{
+
+  socket.onerror = function(){
 
     document.getElementById("status")
-      .textContent="Error";
+      .textContent = "Error";
 
   };
 
-  socket.onmessage=handleSocketMessage;
+
+  socket.onmessage =
+    handleSocketMessage;
+
 }
 
 
@@ -648,34 +830,50 @@ function connectSocket(){
 
 function joinRoom(){
 
-  myName=
+  myName =
     document.getElementById("nameInput")
-    .value.trim();
+      .value.trim();
 
-  myRoom=
+  myRoom =
     document.getElementById("roomInput")
-    .value.trim();
+      .value.trim();
 
   if(!myName){
-    alert("Masukkan nama kamu.");
+
+    alert(
+      "Masukkan nama kamu."
+    );
+
     return;
   }
 
   if(!myRoom){
-    alert("Masukkan ID Room.");
+
+    alert(
+      "Masukkan ID Room."
+    );
+
     return;
   }
 
   if(!connected){
-    alert("Tunggu server terhubung.");
+
+    alert(
+      "Tunggu server terhubung."
+    );
+
     return;
   }
 
-  socket.send(JSON.stringify({
+  sendSocket({
+
     type:"join",
+
     name:myName,
+
     room:myRoom
-  }));
+
+  });
 
 }
 
@@ -689,203 +887,299 @@ async function handleSocketMessage(event){
   let data;
 
   try{
-    data=JSON.parse(event.data);
+
+    data =
+      JSON.parse(
+        event.data
+      );
+
   }catch{
+
     return;
+
   }
 
 
-  if(data.type==="connected"){
+  /* CONNECTED */
+
+  if(data.type === "connected"){
+
     return;
+
   }
 
 
-  if(data.type==="joined"){
+  /* JOINED */
 
-    joined=true;
+  if(data.type === "joined"){
+
+    joined = true;
+
+    myRoom = data.room;
 
     document.getElementById("roomScreen")
-      .style.display="none";
+      .style.display = "none";
 
     addSystem(
-      "Kamu masuk ke room: "+data.room
+      "Kamu masuk ke room: " +
+      data.room
     );
 
-    if(data.users>1){
+    if(data.users > 1){
 
-      addSystem("Teman sudah terhubung.");
+      addSystem(
+        "Teman sudah terhubung."
+      );
 
     }else{
 
-      addSystem("Menunggu teman masuk...");
+      addSystem(
+        "Menunggu teman masuk..."
+      );
 
     }
 
     return;
+
   }
 
 
-  if(data.type==="user-joined"){
+  /* USER JOINED */
+
+  if(data.type === "user-joined"){
 
     addSystem(
-      (data.name||"Teman")+
+      (data.name || "Teman") +
       " masuk ke room."
     );
 
     return;
+
   }
 
 
-  if(data.type==="user-left"){
+  /* USER LEFT */
 
-    addSystem("Teman keluar dari room.");
+  if(data.type === "user-left"){
+
+    addSystem(
+      "Teman keluar dari room."
+    );
 
     if(peerConnection){
+
       endCall(false);
+
     }
 
     return;
+
   }
 
 
-  if(data.type==="error"){
+  /* ERROR */
 
-    alert(data.message);
+  if(data.type === "error"){
+
+    alert(
+      data.message
+    );
 
     return;
+
   }
 
 
   /* CHAT */
 
-  if(data.type==="chat"){
+  if(data.type === "chat"){
 
-    addMessage(data.text,false);
+    addMessage(
+      data.text,
+      false
+    );
 
     return;
+
   }
 
 
   /* IMAGE */
 
-  if(data.type==="image"){
+  if(data.type === "image"){
 
-    addImage(data.data,false);
+    addImage(
+      data.data,
+      false
+    );
 
     return;
+
   }
 
 
-  /* CALL */
+  /* INCOMING CALL */
 
-  if(data.type==="call"){
+  if(data.type === "call"){
 
-    pendingCallType=
-      data.callType||"video";
+    pendingCallType =
+      data.callType || "video";
 
     document.getElementById("callerName")
-      .textContent=data.name||"Teman";
+      .textContent =
+        data.name || "Teman";
 
     document.getElementById("callType")
-      .textContent=
-        pendingCallType==="video"
-        ? "Panggilan video masuk"
-        : "Panggilan suara masuk";
+      .textContent =
+        pendingCallType === "video"
+          ? "Panggilan video masuk"
+          : "Panggilan suara masuk";
 
     document.getElementById("incomingCall")
-      .style.display="flex";
+      .style.display = "flex";
 
     return;
+
   }
 
 
   /* OFFER */
 
-  if(data.type==="offer"){
+  if(data.type === "offer"){
 
-    pendingOffer=data.offer;
+    pendingOffer = data.offer;
+
+    /*
+      Jangan langsung membuat PeerConnection.
+      Tunggu pengguna menekan Terima.
+    */
+
+    if(
+      !document.getElementById(
+        "incomingCall"
+      ).style.display
+    ){
+
+      document.getElementById(
+        "incomingCall"
+      ).style.display = "flex";
+
+    }
 
     return;
+
   }
 
 
   /* ANSWER */
 
-  if(data.type==="answer"){
+  if(data.type === "answer"){
 
-    if(!peerConnection) return;
+    if(!peerConnection){
+
+      return;
+
+    }
 
     try{
 
-      await peerConnection.setRemoteDescription(
-        new RTCSessionDescription(data.answer)
-      );
+      await peerConnection
+        .setRemoteDescription(
+          new RTCSessionDescription(
+            data.answer
+          )
+        );
 
       await addPendingCandidates();
 
+      setCallStatus(
+        "Menghubungkan..."
+      );
+
     }catch(error){
 
-      console.error(error);
+      console.error(
+        "ANSWER:",
+        error
+      );
 
     }
 
     return;
+
   }
 
 
   /* ICE */
 
-  if(data.type==="candidate"){
+  if(data.type === "candidate"){
 
-    const candidate=
-      new RTCIceCandidate(data.candidate);
+    try{
 
-    if(
-      peerConnection &&
-      peerConnection.remoteDescription
-    ){
+      const candidate =
+        new RTCIceCandidate(
+          data.candidate
+        );
 
-      try{
+      if(
+        peerConnection &&
+        peerConnection.remoteDescription
+      ){
 
-        await peerConnection.addIceCandidate(candidate);
+        await peerConnection
+          .addIceCandidate(
+            candidate
+          );
 
-      }catch(error){
+      }else{
 
-        console.error("ICE:",error);
+        pendingCandidates.push(
+          candidate
+        );
 
       }
 
-    }else{
+    }catch(error){
 
-      pendingCandidates.push(candidate);
+      console.error(
+        "ICE:",
+        error
+      );
 
     }
 
     return;
+
   }
 
 
   /* REJECT */
 
-  if(data.type==="reject"){
+  if(data.type === "reject"){
 
-    addSystem("Panggilan ditolak.");
+    addSystem(
+      "Panggilan ditolak."
+    );
 
     endCall(false);
 
     return;
+
   }
 
 
   /* HANGUP */
 
-  if(data.type==="hangup"){
+  if(data.type === "hangup"){
 
-    addSystem("Teman mengakhiri panggilan.");
+    addSystem(
+      "Teman mengakhiri panggilan."
+    );
 
     endCall(false);
 
     return;
+
   }
 
 }
@@ -897,71 +1191,124 @@ async function handleSocketMessage(event){
 
 function sendMessage(){
 
-  const input=
-    document.getElementById("messageInput");
+  const input =
+    document.getElementById(
+      "messageInput"
+    );
 
-  const text=input.value.trim();
+  const text =
+    input.value.trim();
 
-  if(!text) return;
-
-  if(!connected||!joined){
-
-    alert("Masuk ke room terlebih dahulu.");
+  if(!text){
 
     return;
+
   }
 
-  socket.send(JSON.stringify({
+  if(
+    !connected ||
+    !joined
+  ){
+
+    alert(
+      "Masuk ke room terlebih dahulu."
+    );
+
+    return;
+
+  }
+
+  sendSocket({
+
     type:"chat",
+
     text:text
-  }));
 
-  addMessage(text,true);
+  });
 
-  input.value="";
+  addMessage(
+    text,
+    true
+  );
+
+  input.value = "";
+
 }
 
 
-document.getElementById("messageInput")
-.addEventListener("keydown",e=>{
+document.getElementById(
+  "messageInput"
+).addEventListener(
+  "keydown",
+  function(e){
 
-  if(e.key==="Enter"){
-    sendMessage();
+    if(e.key === "Enter"){
+
+      sendMessage();
+
+    }
+
   }
+);
 
-});
 
+function addMessage(
+  text,
+  mine
+){
 
-function addMessage(text,mine){
+  const chat =
+    document.getElementById(
+      "chat"
+    );
 
-  const chat=document.getElementById("chat");
+  const div =
+    document.createElement(
+      "div"
+    );
 
-  const div=document.createElement("div");
+  div.className =
+    "message " +
+    (mine ? "me" : "other");
 
-  div.className=
-    "message "+(mine?"me":"other");
+  div.textContent =
+    text;
 
-  div.textContent=text;
+  chat.appendChild(
+    div
+  );
 
-  chat.appendChild(div);
+  chat.scrollTop =
+    chat.scrollHeight;
 
-  chat.scrollTop=chat.scrollHeight;
 }
 
 
 function addSystem(text){
 
-  const chat=document.getElementById("chat");
+  const chat =
+    document.getElementById(
+      "chat"
+    );
 
-  const div=document.createElement("div");
+  const div =
+    document.createElement(
+      "div"
+    );
 
-  div.className="system";
+  div.className =
+    "system";
 
-  div.textContent=text;
+  div.textContent =
+    text;
 
-  chat.appendChild(div);
+  chat.appendChild(
+    div
+  );
 
-  chat.scrollTop=chat.scrollHeight;
+  chat.scrollTop =
+    chat.scrollHeight;
+
 }
 
 
@@ -971,69 +1318,115 @@ function addSystem(text){
 
 function sendImage(event){
 
-  const file=event.target.files[0];
+  const file =
+    event.target.files[0];
 
-  if(!file) return;
+  if(!file){
+
+    return;
+
+  }
 
   if(!joined){
 
-    alert("Masuk ke room terlebih dahulu.");
+    alert(
+      "Masuk ke room terlebih dahulu."
+    );
 
-    event.target.value="";
-
-    return;
-  }
-
-  if(file.size>5*1024*1024){
-
-    alert("Foto maksimal 5 MB.");
-
-    event.target.value="";
+    event.target.value = "";
 
     return;
+
   }
 
-  const reader=new FileReader();
+  if(
+    file.size >
+    5 * 1024 * 1024
+  ){
 
-  reader.onload=()=>{
+    alert(
+      "Foto maksimal 5 MB."
+    );
 
-    const data=reader.result;
+    event.target.value = "";
 
-    socket.send(JSON.stringify({
-      type:"image",
-      data:data
-    }));
+    return;
 
-    addImage(data,true);
+  }
 
-  };
+  const reader =
+    new FileReader();
 
-  reader.readAsDataURL(file);
+  reader.onload =
+    function(){
 
-  event.target.value="";
+      const data =
+        reader.result;
+
+      sendSocket({
+
+        type:"image",
+
+        data:data
+
+      });
+
+      addImage(
+        data,
+        true
+      );
+
+    };
+
+  reader.readAsDataURL(
+    file
+  );
+
+  event.target.value = "";
+
 }
 
 
-function addImage(data,mine){
+function addImage(
+  data,
+  mine
+){
 
-  const chat=document.getElementById("chat");
+  const chat =
+    document.getElementById(
+      "chat"
+    );
 
-  const div=document.createElement("div");
+  const div =
+    document.createElement(
+      "div"
+    );
 
-  div.className=
-    "message "+(mine?"me":"other");
+  div.className =
+    "message " +
+    (mine ? "me" : "other");
 
-  const img=document.createElement("img");
+  const img =
+    document.createElement(
+      "img"
+    );
 
-  img.src=data;
+  img.src = data;
 
-  img.className="chatImage";
+  img.className =
+    "chatImage";
 
-  div.appendChild(img);
+  div.appendChild(
+    img
+  );
 
-  chat.appendChild(div);
+  chat.appendChild(
+    div
+  );
 
-  chat.scrollTop=chat.scrollHeight;
+  chat.scrollTop =
+    chat.scrollHeight;
+
 }
 
 
@@ -1041,30 +1434,61 @@ function addImage(data,mine){
    MEDIA
 ========================= */
 
-async function getMedia(video){
+async function getMedia(
+  video
+){
 
   try{
 
-    localStream=
-      await navigator.mediaDevices.getUserMedia({
-        video:video,
-        audio:true
-      });
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
 
-    document.getElementById("localVideo")
-      .srcObject=localStream;
+      throw new Error(
+        "Browser tidak mendukung kamera/mikrofon."
+      );
+
+    }
+
+    localStream =
+      await navigator.mediaDevices
+        .getUserMedia({
+
+          video: video
+            ? {
+                facingMode:"user"
+              }
+            : false,
+
+          audio:true
+
+        });
+
+
+    document.getElementById(
+      "localVideo"
+    ).srcObject =
+      localStream;
 
     return true;
 
   }catch(error){
 
+    console.error(
+      "MEDIA:",
+      error
+    );
+
     alert(
-      "Kamera/mikrofon tidak dapat digunakan.\n\n"+
+      "Kamera/mikrofon tidak dapat digunakan.\n\n" +
       error.message
     );
 
     return false;
+
   }
+
 }
 
 
@@ -1072,186 +1496,103 @@ async function getMedia(video){
    START CALL
 ========================= */
 
-async function startCall(video){
+async function startCall(
+  video
+){
 
-  if(!connected||!joined){
+  if(
+    !connected ||
+    !joined
+  ){
 
-    alert("Masuk ke room terlebih dahulu.");
+    alert(
+      "Masuk ke room terlebih dahulu."
+    );
 
     return;
+
   }
 
   if(peerConnection){
 
-    alert("Panggilan sedang berlangsung.");
+    alert(
+      "Panggilan sedang berlangsung."
+    );
 
     return;
-  }
-
-  const ok=await getMedia(video);
-
-  if(!ok) return;
-
-  isCaller=true;
-
-  pendingCallType=
-    video?"video":"audio";
-
-  showVideoScreen(video);
-
-  createPeer();
-
-  const offer=
-    await peerConnection.createOffer();
-
-  await peerConnection.setLocalDescription(offer);
-
-  socket.send(JSON.stringify({
-    type:"call",
-    callType:pendingCallType,
-    name:myName
-  }));
-
-  socket.send(JSON.stringify({
-    type:"offer",
-    offer:offer
-  }));
-
-}
-
-
-/* =========================
-   PEER
-========================= */
-
-function createPeer(){
-
-  peerConnection=
-    new RTCPeerConnection(rtcConfig);
-
-  if(localStream){
-
-    localStream.getTracks().forEach(track=>{
-
-      peerConnection.addTrack(
-        track,
-        localStream
-      );
-
-    });
 
   }
 
-
-  peerConnection.ontrack=event=>{
-
-    if(event.streams&&event.streams[0]){
-
-      document.getElementById("remoteVideo")
-        .srcObject=event.streams[0];
-
-    }
-
-  };
-
-
-  peerConnection.onicecandidate=event=>{
-
-    if(event.candidate&&connected){
-
-      socket.send(JSON.stringify({
-        type:"candidate",
-        candidate:event.candidate
-      }));
-
-    }
-
-  };
-
-
-  peerConnection.onconnectionstatechange=()=>{
-
-    if(!peerConnection) return;
-
-    const state=
-      peerConnection.connectionState;
-
-    if(state==="connected"){
-
-      addSystem("📹 Panggilan tersambung.");
-
-    }
-
-    if(state==="failed"){
-
-      addSystem("Koneksi video gagal.");
-
-    }
-
-  };
-
-}
-
-
-/* =========================
-   ACCEPT
-========================= */
-
-async function acceptCall(){
-
-  document.getElementById("incomingCall")
-    .style.display="none";
-
-  const video=
-    pendingCallType==="video";
-
-  const ok=await getMedia(video);
+  const ok =
+    await getMedia(
+      video
+    );
 
   if(!ok){
 
-    rejectCall();
-
     return;
+
   }
 
-  isCaller=false;
+  isCaller = true;
 
-  showVideoScreen(video);
+  pendingCallType =
+    video
+      ? "video"
+      : "audio";
+
+  showVideoScreen(
+    video
+  );
+
+  setCallStatus(
+    "Memanggil teman..."
+  );
 
   createPeer();
 
-  if(!pendingOffer){
-
-    addSystem("Menunggu data panggilan...");
-
-    return;
-  }
-
   try{
 
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(pendingOffer)
-    );
+    const offer =
+      await peerConnection
+        .createOffer();
 
-    await addPendingCandidates();
+    await peerConnection
+      .setLocalDescription(
+        offer
+      );
 
-    const answer=
-      await peerConnection.createAnswer();
+    sendSocket({
 
-    await peerConnection.setLocalDescription(answer);
+      type:"call",
 
-    socket.send(JSON.stringify({
-      type:"answer",
-      answer:answer
-    }));
+      callType:
+        pendingCallType,
 
-    pendingOffer=null;
+      name:
+        myName
+
+    });
+
+    sendSocket({
+
+      type:"offer",
+
+      offer:
+        peerConnection.localDescription
+
+    });
 
   }catch(error){
 
-    console.error(error);
+    console.error(
+      "OFFER:",
+      error
+    );
 
-    alert("Gagal menerima panggilan.");
+    alert(
+      "Gagal membuat panggilan."
+    );
 
     endCall(false);
 
@@ -1261,28 +1602,324 @@ async function acceptCall(){
 
 
 /* =========================
-   ICE PENDING
+   CREATE PEER
+========================= */
+
+function createPeer(){
+
+  if(peerConnection){
+
+    return peerConnection;
+
+  }
+
+  peerConnection =
+    new RTCPeerConnection(
+      rtcConfig
+    );
+
+
+  if(localStream){
+
+    localStream
+      .getTracks()
+      .forEach(
+        function(track){
+
+          peerConnection.addTrack(
+            track,
+            localStream
+          );
+
+        }
+      );
+
+  }
+
+
+  peerConnection.ontrack =
+    function(event){
+
+      if(
+        event.streams &&
+        event.streams[0]
+      ){
+
+        document.getElementById(
+          "remoteVideo"
+        ).srcObject =
+          event.streams[0];
+
+        setCallStatus(
+          "📹 Panggilan tersambung"
+        );
+
+      }
+
+    };
+
+
+  peerConnection.onicecandidate =
+    function(event){
+
+      if(
+        event.candidate &&
+        connected
+      ){
+
+        sendSocket({
+
+          type:"candidate",
+
+          candidate:
+            event.candidate
+
+        });
+
+      }
+
+    };
+
+
+  peerConnection.onconnectionstatechange =
+    function(){
+
+      if(!peerConnection){
+
+        return;
+
+      }
+
+      const state =
+        peerConnection
+          .connectionState;
+
+      console.log(
+        "WebRTC:",
+        state
+      );
+
+      if(
+        state === "connected"
+      ){
+
+        setCallStatus(
+          "📹 Panggilan tersambung"
+        );
+
+        addSystem(
+          "📹 Panggilan tersambung."
+        );
+
+      }
+
+      if(
+        state === "connecting"
+      ){
+
+        setCallStatus(
+          "Menghubungkan..."
+        );
+
+      }
+
+      if(
+        state === "disconnected"
+      ){
+
+        setCallStatus(
+          "Koneksi terputus..."
+        );
+
+      }
+
+      if(
+        state === "failed"
+      ){
+
+        setCallStatus(
+          "Koneksi gagal."
+        );
+
+        addSystem(
+          "Koneksi video gagal."
+        );
+
+      }
+
+    };
+
+
+  peerConnection.oniceconnectionstatechange =
+    function(){
+
+      console.log(
+        "ICE:",
+        peerConnection
+          .iceConnectionState
+      );
+
+    };
+
+
+  return peerConnection;
+
+}
+
+
+/* =========================
+   ACCEPT CALL
+========================= */
+
+async function acceptCall(){
+
+  document.getElementById(
+    "incomingCall"
+  ).style.display =
+    "none";
+
+
+  const video =
+    pendingCallType === "video";
+
+
+  const ok =
+    await getMedia(
+      video
+    );
+
+  if(!ok){
+
+    rejectCall();
+
+    return;
+
+  }
+
+
+  isCaller = false;
+
+  showVideoScreen(
+    video
+  );
+
+  setCallStatus(
+    "Menerima panggilan..."
+  );
+
+
+  createPeer();
+
+
+  if(!pendingOffer){
+
+    addSystem(
+      "Menunggu data panggilan..."
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await peerConnection
+      .setRemoteDescription(
+        new RTCSessionDescription(
+          pendingOffer
+        )
+      );
+
+
+    await addPendingCandidates();
+
+
+    const answer =
+      await peerConnection
+        .createAnswer();
+
+
+    await peerConnection
+      .setLocalDescription(
+        answer
+      );
+
+
+    sendSocket({
+
+      type:"answer",
+
+      answer:
+        peerConnection.localDescription
+
+    });
+
+
+    pendingOffer = null;
+
+    setCallStatus(
+      "Menghubungkan..."
+    );
+
+  }catch(error){
+
+    console.error(
+      "ACCEPT:",
+      error
+    );
+
+    alert(
+      "Gagal menerima panggilan."
+    );
+
+    endCall(false);
+
+  }
+
+}
+
+
+/* =========================
+   PENDING ICE
 ========================= */
 
 async function addPendingCandidates(){
 
-  if(!peerConnection) return;
+  if(!peerConnection){
 
-  for(const candidate of pendingCandidates){
+    return;
+
+  }
+
+  const list =
+    pendingCandidates;
+
+  pendingCandidates = [];
+
+
+  for(
+    const candidate of list
+  ){
 
     try{
 
-      await peerConnection.addIceCandidate(candidate);
+      await peerConnection
+        .addIceCandidate(
+          candidate
+        );
 
     }catch(error){
 
-      console.error("ICE pending:",error);
+      console.error(
+        "ICE pending:",
+        error
+      );
 
     }
 
   }
 
-  pendingCandidates=[];
 }
 
 
@@ -1292,19 +1929,24 @@ async function addPendingCandidates(){
 
 function rejectCall(){
 
-  document.getElementById("incomingCall")
-    .style.display="none";
+  document.getElementById(
+    "incomingCall"
+  ).style.display =
+    "none";
 
   if(connected){
 
-    socket.send(JSON.stringify({
+    sendSocket({
+
       type:"reject"
-    }));
+
+    });
 
   }
 
-  pendingOffer=null;
-  pendingCandidates=[];
+  pendingOffer = null;
+
+  pendingCandidates = [];
 
 }
 
@@ -1313,50 +1955,82 @@ function rejectCall(){
    END CALL
 ========================= */
 
-function endCall(sendSignal=true){
+function endCall(
+  sendSignal = true
+){
 
-  if(sendSignal&&connected){
+  if(
+    sendSignal &&
+    connected
+  ){
 
-    socket.send(JSON.stringify({
+    sendSocket({
+
       type:"hangup"
-    }));
+
+    });
 
   }
+
 
   if(peerConnection){
 
+    peerConnection.ontrack = null;
+
+    peerConnection.onicecandidate = null;
+
     peerConnection.close();
 
-    peerConnection=null;
+    peerConnection = null;
 
   }
+
 
   if(localStream){
 
-    localStream.getTracks().forEach(track=>{
-      track.stop();
-    });
+    localStream
+      .getTracks()
+      .forEach(
+        function(track){
 
-    localStream=null;
+          track.stop();
+
+        }
+      );
+
+    localStream = null;
 
   }
 
-  document.getElementById("localVideo")
-    .srcObject=null;
 
-  document.getElementById("remoteVideo")
-    .srcObject=null;
+  document.getElementById(
+    "localVideo"
+  ).srcObject = null;
 
-  document.getElementById("videoScreen")
-    .style.display="none";
+  document.getElementById(
+    "remoteVideo"
+  ).srcObject = null;
 
-  document.getElementById("incomingCall")
-    .style.display="none";
+  document.getElementById(
+    "videoScreen"
+  ).style.display =
+    "none";
 
-  pendingOffer=null;
-  pendingCandidates=[];
+  document.getElementById(
+    "incomingCall"
+  ).style.display =
+    "none";
 
-  addSystem("Panggilan selesai.");
+
+  pendingOffer = null;
+
+  pendingCandidates = [];
+
+  isCaller = false;
+
+  addSystem(
+    "Panggilan selesai."
+  );
 
 }
 
@@ -1365,14 +2039,37 @@ function endCall(sendSignal=true){
    VIDEO SCREEN
 ========================= */
 
-function showVideoScreen(video){
+function showVideoScreen(
+  video
+){
 
-  document.getElementById("videoScreen")
-    .style.display="block";
+  document.getElementById(
+    "videoScreen"
+  ).style.display =
+    "block";
 
-  document.getElementById("localVideo")
-    .style.display=
-      video?"block":"none";
+  document.getElementById(
+    "localVideo"
+  ).style.display =
+    video
+      ? "block"
+      : "none";
+
+}
+
+
+/* =========================
+   CALL STATUS
+========================= */
+
+function setCallStatus(
+  text
+){
+
+  document.getElementById(
+    "callStatus"
+  ).textContent =
+    text;
 
 }
 
@@ -1383,12 +2080,22 @@ function showVideoScreen(video){
 
 function toggleMute(){
 
-  if(!localStream) return;
+  if(!localStream){
 
-  localStream.getAudioTracks()
-    .forEach(track=>{
-      track.enabled=!track.enabled;
-    });
+    return;
+
+  }
+
+  localStream
+    .getAudioTracks()
+    .forEach(
+      function(track){
+
+        track.enabled =
+          !track.enabled;
+
+      }
+    );
 
 }
 
@@ -1399,12 +2106,22 @@ function toggleMute(){
 
 function toggleCamera(){
 
-  if(!localStream) return;
+  if(!localStream){
 
-  localStream.getVideoTracks()
-    .forEach(track=>{
-      track.enabled=!track.enabled;
-    });
+    return;
+
+  }
+
+  localStream
+    .getVideoTracks()
+    .forEach(
+      function(track){
+
+        track.enabled =
+          !track.enabled;
+
+      }
+    );
 
 }
 
@@ -1414,9 +2131,10 @@ function toggleCamera(){
 ========================= */
 
 loadRoomFromLink();
+
 connectSocket();
 
 </script>
 
 </body>
-</html>
+  </html>
