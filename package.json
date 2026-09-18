@@ -1,0 +1,12 @@
+{
+  "name": "chatandcall",
+  "version": "2.0.0",
+  "description": "Chat and WebRTC video call",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
